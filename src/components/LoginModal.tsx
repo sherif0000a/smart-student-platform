@@ -93,9 +93,16 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       return;
     }
 
-    // Check PIN (if student has a pin set, verify it, or default 123)
-    if (currentStudent.pin && studentPin && studentPin.trim() !== currentStudent.pin.trim()) {
-      setErrorMessage('كَلِمَةُ الْمُرُورِ غَيْرُ صَحِيحَةٍ! (الافْتِرَاضِيَّةُ: 123)');
+    // Strictly enforce student PIN
+    const requiredPin = (currentStudent.pin || '123').trim();
+    if (!studentPin.trim()) {
+      setErrorMessage('مِنْ فَضْلِكَ أَدْخِلْ كَلِمَةَ الْمُرُورِ لِحِسَابِ التِّلْمِيذِ!');
+      sounds.playHint();
+      return;
+    }
+
+    if (studentPin.trim() !== requiredPin) {
+      setErrorMessage('كَلِمَةُ الْمُرُورِ غَيْرُ صَحِيحَةٍ! تَأَكَّدْ مِنَ الرَّمْزِ السِّرِّيِّ الصَّحِيحِ.');
       sounds.playHint();
       return;
     }
@@ -117,8 +124,15 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       return;
     }
 
-    if (teacherPin.trim() !== currentTeacher.pin.trim()) {
-      setErrorMessage('كَلِمَةُ مُرُورِ الْمُعَلِّمِ غَيْرُ صَحِيحَةٍ! (الافْتِرَاضِيَّةُ: 1234)');
+    const expectedTeacherPin = (currentTeacher.pin || '1234').trim();
+    if (!teacherPin.trim()) {
+      setErrorMessage('مِنْ فَضْلِكَ أَدْخِلْ كَلِمَةَ مُرُورِ الْمُعَلِّمِ!');
+      sounds.playHint();
+      return;
+    }
+
+    if (teacherPin.trim() !== expectedTeacherPin) {
+      setErrorMessage('كَلِمَةُ مُرُورِ الْمُعَلِّمِ غَيْرُ صَحِيحَةٍ!');
       sounds.playHint();
       return;
     }
@@ -277,15 +291,16 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
                 <div className="space-y-1">
                   <label className="block text-xs font-bold text-slate-700">
-                    كَلِمَةُ مُرُورِ التِّلْمِيذِ (اخْتِيَارِيٌّ / افْتِرَاضِيٌّ 123):
+                    كَلِمَةُ الْمُرُورِ / الرَّمْزُ السِّرِّيُّ لِلْحِسَابِ (الافْتِرَاضِيَّةُ: 123):
                   </label>
                   <div className="relative">
                     <input
                       type="password"
                       value={studentPin}
                       onChange={e => setStudentPin(e.target.value)}
-                      placeholder="123"
+                      placeholder="أَدْخِلْ كَلِمَةَ الْمُرُورِ هُنَا..."
                       className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-200 rounded-xl text-slate-800 font-bold focus:outline-none focus:border-indigo-500"
+                      required
                     />
                     <KeyRound className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                   </div>

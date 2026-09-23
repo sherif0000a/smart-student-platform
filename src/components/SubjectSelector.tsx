@@ -10,6 +10,7 @@ interface SubjectSelectorProps {
   onOpenRewardGame: () => void;
   onOpenOnlineStudents: () => void;
   onlineCount: number;
+  showOnlineCount?: boolean;
 }
 
 export const SubjectSelector: React.FC<SubjectSelectorProps> = ({
@@ -18,7 +19,8 @@ export const SubjectSelector: React.FC<SubjectSelectorProps> = ({
   onOpenDictionary,
   onOpenRewardGame,
   onOpenOnlineStudents,
-  onlineCount
+  onlineCount,
+  showOnlineCount = false
 }) => {
   return (
     <div className="bg-white/90 backdrop-blur-md border-b-2 border-indigo-100 sticky top-14 sm:top-16 z-30 shadow-xs py-2 px-2 sm:px-4">
@@ -117,19 +119,21 @@ export const SubjectSelector: React.FC<SubjectSelectorProps> = ({
             <span>لُعْبَةُ التَّقْفِيلِ 🎯</span>
           </button>
 
-          {/* Live Online Students Ticker */}
-          <button
-            onClick={onOpenOnlineStudents}
-            className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 border-2 border-emerald-300 text-emerald-800 rounded-2xl font-black text-xs flex items-center gap-1.5 transition-all shadow-xs"
-            title="الطلاب المتواجدون أونلاين الآن"
-          >
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-            </span>
-            <Users className="w-3.5 h-3.5 text-emerald-600" />
-            <span>أَوْنْلَايْن: <strong className="text-emerald-950 font-black">{onlineCount}</strong></span>
-          </button>
+          {/* Live Online Students Ticker - only shown if authorized (e.g. teacher/supervisor), hidden for students */}
+          {showOnlineCount && (
+            <button
+              onClick={onOpenOnlineStudents}
+              className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 border-2 border-emerald-300 text-emerald-800 rounded-2xl font-black text-xs flex items-center gap-1.5 transition-all shadow-xs"
+              title="الطلاب المتواجدون أونلاين الآن"
+            >
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              </span>
+              <Users className="w-3.5 h-3.5 text-emerald-600" />
+              <span>أَوْنْلَايْن: <strong className="text-emerald-950 font-black">{onlineCount}</strong></span>
+            </button>
+          )}
         </div>
       </div>
     </div>

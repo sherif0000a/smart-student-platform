@@ -22,6 +22,7 @@ interface AdventureMapProps {
   selectedUnitId: number;
   onSelectUnit: (unitId: number) => void;
   onSelectLesson: (lesson: Lesson) => void;
+  onOpenQuiz?: (unitId: number) => void;
 }
 
 export const AdventureMap: React.FC<AdventureMapProps> = ({
@@ -29,6 +30,7 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({
   selectedUnitId,
   onSelectUnit,
   onSelectLesson,
+  onOpenQuiz,
 }) => {
   const currentUnit = allUnits.find((u) => u.id === selectedUnitId) || allUnits[0];
   const isGirl = profile.heroType === 'girl';
@@ -270,6 +272,41 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({
           })}
         </motion.div>
       </AnimatePresence>
+
+      {/* End-of-Unit Quiz Special Banner Card */}
+      {onOpenQuiz && (
+        <div className="mt-6 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 rounded-3xl p-5 md:p-6 text-white shadow-lg border-2 border-amber-300 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5 text-center sm:text-right">
+            <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-3xl shadow-inner shrink-0 border border-white/30">
+              📝
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-1.5 bg-white/20 px-2.5 py-0.5 rounded-full text-[11px] font-black text-amber-100 mb-1">
+                <span>تَصْحِيحٌ آلِيٌّ وَتَغْذِيَةٌ رَاجِعَةٌ فَوْرِيَّةٌ</span>
+                <span>⭐</span>
+              </div>
+              <h4 className="text-lg md:text-xl font-black">
+                اخْتِبَارُ نِهَايَةِ الْوَحْدَةِ {currentUnit.numberArabic} (Quiz)
+              </h4>
+              <p className="text-xs md:text-sm text-amber-100 font-semibold max-w-lg">
+                اخْتَبِرْ مَعْلُومَاتِكَ فِي دُرُوسِ {currentUnit.title}، اكْسِبْ نُجُوماً ذَهَبِيَّةً، وَتَعَلَّمْ مِنْ كُلِّ إِجَابَةٍ!
+              </p>
+            </div>
+          </div>
+
+          <button
+            id={`start-unit-quiz-btn-${currentUnit.id}`}
+            onClick={() => {
+              sounds.playClick();
+              onOpenQuiz(currentUnit.id);
+            }}
+            className="bg-white hover:bg-amber-50 text-amber-900 font-black text-xs md:text-sm px-6 py-3 rounded-2xl shadow-md transition transform hover:scale-105 active:scale-95 shrink-0 flex items-center gap-2"
+          >
+            <span>ابْدَأِ الاخْتِبَارَ الآنَ</span>
+            <span>🚀</span>
+          </button>
+        </div>
+      )}
       </div>
 
     </div>

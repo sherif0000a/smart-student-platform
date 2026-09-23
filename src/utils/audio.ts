@@ -266,30 +266,48 @@ class SoundEffectsEngine {
 
 export const sounds = new SoundEffectsEngine();
 
-// Mobile audio unlocker: resumes Web Audio Context and primes SpeechSynthesis on first tap
+// Mobile audio unlocker: resumes Web Audio Context and primes SpeechSynthesis & HTMLAudio on first tap
 export function unlockMobileAudio() {
   if (typeof window === 'undefined') return;
-  if (window.__hasUnlockedMobileAudio) return;
 
   try {
-    sounds.getContext();
+    const ctx = sounds.getContext();
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+
+    if (ctx) {
+      // Play a 1-sample inaudible buffer to reliably unlock Web Audio on iOS Safari & Chrome
+      const buffer = ctx.createBuffer(1, 1, 22050);
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(ctx.destination);
+      source.start(0);
+    }
+
     if (window.speechSynthesis) {
       if (window.speechSynthesis.paused) {
         window.speechSynthesis.resume();
       }
-      // Speak a zero-volume blank token to initialize iOS and Android speech pipes
-      const dummy = new SpeechSynthesisUtterance('');
-      dummy.volume = 0;
-      window.speechSynthesis.speak(dummy);
+      // Prime mobile TTS pipeline with a tiny space character
+      if (!window.__hasUnlockedMobileAudio) {
+        const dummy = new SpeechSynthesisUtterance(' ');
+        dummy.volume = 0.01;
+        dummy.rate = 2.0;
+        window.speechSynthesis.speak(dummy);
+      }
     }
+
     window.__hasUnlockedMobileAudio = true;
   } catch {}
 }
 
-// Auto-register touch & click unlockers
+// Auto-register touch & click unlockers across all interaction types
 if (typeof window !== 'undefined') {
-  window.addEventListener('touchstart', unlockMobileAudio, { once: true, passive: true });
-  window.addEventListener('click', unlockMobileAudio, { once: true });
+  const events = ['touchstart', 'touchend', 'pointerdown', 'click', 'keydown'];
+  events.forEach((evt) => {
+    window.addEventListener(evt, unlockMobileAudio, { passive: true });
+  });
 }
 
 // Track active audio sessions and elements
@@ -515,21 +533,22 @@ export function speakArabic(
     }
   };
 
-  // Attempt backend high-quality audio stream first with quick 750ms probe
+  // Universal playback engine for mobile & desktop: High-quality MP3 stream first with instant Web Speech fallback
   try {
     const textSample = cleanText.slice(0, 450).trim();
-    const audioUrl = `/api/tts?text=${encodeURIComponent(textSample)}`;
+    const audioUrl = `/api/tts?text=${encodeURIComponent(textSample)}&tl=ar`;
     const audio = new Audio();
     currentAudioElement = audio;
+    audio.preload = 'auto';
     audio.playbackRate = Math.max(0.6, Math.min(1.8, rate));
 
-    // Watchdog: If server audio doesn't start in 800ms (e.g. static hosting on Vercel), launch Web Speech API immediately!
+    // Watchdog: If server audio doesn't start in 650ms, fall back to Web Speech API
     currentAudioTimeout = setTimeout(() => {
       if (activeSessionId !== currentSessionCounter) return;
       if (!hasStarted) {
         runWebSpeech(cleanText, 'ar-SA', rate, safeStart, safeEnd, activeSessionId);
       }
-    }, 800);
+    }, 650);
 
     audio.onplay = () => {
       if (activeSessionId !== currentSessionCounter) {
@@ -613,7 +632,7 @@ export function speakEnglish(
   text: string,
   onEnd?: () => void,
   onStart?: () => void,
-  rate: number = 0.82
+  rate: number = 0.85
 ): { stop: () => void } {
   stopSpeaking();
   unlockMobileAudio();
@@ -625,9 +644,76 @@ export function speakEnglish(
   }
 
   const activeSessionId = ++currentSessionCounter;
+  let hasStarted = false;
   isGloballyPlayingAudio = true;
 
-  runWebSpeech(clean, 'en-US', rate, onStart, onEnd, activeSessionId);
+  const safeEnd = () => {
+    if (activeSessionId !== currentSessionCounter) return;
+    isGloballyPlayingAudio = false;
+    if (currentAudioTimeout) {
+      clearTimeout(currentAudioTimeout);
+      currentAudioTimeout = null;
+    }
+    currentAudioElement = null;
+    onEnd?.();
+  };
+
+  const safeStart = () => {
+    if (activeSessionId !== currentSessionCounter) return;
+    if (!hasStarted) {
+      hasStarted = true;
+      if (currentAudioTimeout) {
+        clearTimeout(currentAudioTimeout);
+        currentAudioTimeout = null;
+      }
+      onStart?.();
+    }
+  };
+
+  // Try server English MP3 stream first with fallback to runWebSpeech
+  try {
+    const audioUrl = `/api/tts?text=${encodeURIComponent(clean.slice(0, 300))}&tl=en`;
+    const audio = new Audio();
+    currentAudioElement = audio;
+    audio.preload = 'auto';
+    audio.playbackRate = Math.max(0.6, Math.min(1.8, rate));
+
+    currentAudioTimeout = setTimeout(() => {
+      if (activeSessionId !== currentSessionCounter) return;
+      if (!hasStarted) {
+        runWebSpeech(clean, 'en-US', rate, safeStart, safeEnd, activeSessionId);
+      }
+    }, 600);
+
+    audio.onplay = () => {
+      if (activeSessionId !== currentSessionCounter) {
+        audio.pause();
+        return;
+      }
+      safeStart();
+    };
+
+    audio.onended = () => {
+      if (activeSessionId !== currentSessionCounter) return;
+      safeEnd();
+    };
+
+    audio.onerror = () => {
+      if (activeSessionId !== currentSessionCounter) return;
+      runWebSpeech(clean, 'en-US', rate, safeStart, safeEnd, activeSessionId);
+    };
+
+    audio.src = audioUrl;
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {
+        if (activeSessionId !== currentSessionCounter) return;
+        runWebSpeech(clean, 'en-US', rate, safeStart, safeEnd, activeSessionId);
+      });
+    }
+  } catch {
+    runWebSpeech(clean, 'en-US', rate, safeStart, safeEnd, activeSessionId);
+  }
 
   return { stop: () => stopSpeaking() };
 }

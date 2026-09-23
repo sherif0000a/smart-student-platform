@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Volume2, X, BookOpen, Sparkles, Filter, CheckCircle2, ChevronRight, ChevronLeft } from 'lucide-react';
 import { englishDictionary1000 } from '../curriculum';
 import { DictionaryWord } from '../types';
@@ -162,8 +163,14 @@ export const EnglishDictionaryModal: React.FC<EnglishDictionaryModalProps> = ({
   const currentPracticeWord = filteredWords[practiceIndex] || filteredWords[0];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/60 backdrop-blur-sm animate-fadeIn">
-      <div className="relative w-full max-w-4xl max-h-[90vh] bg-white rounded-3xl shadow-2xl border-4 border-sky-300 overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/60 backdrop-blur-sm">
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0, y: 25 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+        transition={{ type: 'spring', damping: 24, stiffness: 280 }}
+        className="relative w-full max-w-4xl max-h-[90vh] bg-white rounded-3xl shadow-2xl border-4 border-sky-300 overflow-hidden flex flex-col"
+      >
         {/* Header */}
         <div className="bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 p-4 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -451,7 +458,7 @@ export const EnglishDictionaryModal: React.FC<EnglishDictionaryModalProps> = ({
         <div className="p-3 bg-slate-100 border-t border-slate-200 text-center text-xs text-slate-500 font-medium">
           مُصَمَّمٌ لِمَنْهَجِ الصَّفِّ الثَّالِثِ الابْتِدَائِيِّ - لِتَعْلِيمِ الطِّفْلِ النُّطْقَ الصَّحِيحَ وَالْمَعَانِي بِسُهُولَةٍ 🌟
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

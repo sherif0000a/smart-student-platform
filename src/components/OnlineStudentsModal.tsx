@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Users, X, Sparkles, Star, Award, Heart, MessageCircle, Send, RefreshCw, Zap } from 'lucide-react';
 import { LiveOnlineStudent } from '../types';
 import { fetchLiveOnlineStudents } from '../utils/presenceManager';
@@ -58,8 +59,14 @@ export const OnlineStudentsModal: React.FC<OnlineStudentsModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/60 backdrop-blur-sm animate-fadeIn">
-      <div className="relative w-full max-w-xl max-h-[85vh] bg-white rounded-3xl shadow-2xl border-4 border-emerald-300 overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/60 backdrop-blur-sm">
+      <motion.div
+        initial={{ scale: 0.88, opacity: 0, y: 25 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.88, opacity: 0, y: 20 }}
+        transition={{ type: 'spring', damping: 24, stiffness: 280 }}
+        className="relative w-full max-w-xl max-h-[85vh] bg-white rounded-3xl shadow-2xl border-4 border-emerald-300 overflow-hidden flex flex-col"
+      >
         {/* Header */}
         <div className="bg-gradient-to-r from-emerald-500 via-teal-600 to-green-600 p-4 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -198,7 +205,7 @@ export const OnlineStudentsModal: React.FC<OnlineStudentsModalProps> = ({
         <div className="p-3 bg-slate-100 border-t border-slate-200 text-center text-xs text-slate-500 font-medium">
           مِيزَةُ التَّوَاصُلِ الْحَقِيقِيِّ لِتَشْجِيعِ الطُّلابِ الْمُجْتَهِدِينَ عَلَى التَّفَوُّقِ مَعاً! 🏆
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

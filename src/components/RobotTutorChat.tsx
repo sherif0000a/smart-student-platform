@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { UserProfile, Lesson } from '../types';
 import { sounds, speakArabic, stopSpeaking } from '../utils/audio';
 import { findCurriculumMatch } from '../data/curriculumMaster';
-import { solvePrimary3Query } from '../utils/tutorBrain';
+import { solvePrimary3Query, recommendNextLesson } from '../utils/tutorBrain';
 import curriculumReferenceData from '../data/curriculumReference.json';
 import { InteractiveCurriculumReader } from './InteractiveCurriculumReader';
 import { 
@@ -321,13 +321,45 @@ export const RobotTutorChat: React.FC<RobotTutorChatProps> = ({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<'all' | 'poems' | 'grammar' | 'stories' | 'spelling'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<'all' | 'recommend' | 'math' | 'english' | 'arabic' | 'poems' | 'grammar'>('all');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const isGirl = profile.heroType === 'girl';
   const studentName = profile.name?.trim() || (isGirl ? 'بَطَلَتَنَا' : 'بَطَلَنَا');
   const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
   const [activeReaderMsgId, setActiveReaderMsgId] = useState<string | null>(null);
+
+  // Trigger Personalized Next Lesson Recommendation
+  const handleTriggerRecommendation = () => {
+    sounds.playFanfare();
+    const suggestion = recommendNextLesson(profile);
+    const praiseText = isGirl ? `يَا بَطَلَتَنَا الذَّكِيَّةَ ${studentName}` : `يَا بَطَلَنَا الشُّجَاعَ ${studentName}`;
+    const recMsgId = `tutor-rec-${Date.now()}`;
+    const formattedRecText = `🎯 **اقْتِرَاحُ دَرْسِكَ الْقَادِمِ الْمُخَصَّصِ ${praiseText}** 🌟
+
+🏆 **الدَّرْسُ الْمُقْتَرَحُ**: «**${suggestion.title}**»
+🏷️ **مُسْتَوَاكَ الْحَالِيُّ**: ${suggestion.levelBadge}
+📚 **الْمَادَّةُ**: ${suggestion.subjectArabic} (رَصِيدُكَ: ${profile.totalStars || 0} ⭐)
+
+💡 **لِمَاذَا اخْتَرْنَا لَكَ هَذَا الدَّرْسَ؟**
+${suggestion.reason}
+
+⚡ **تَحَدِّي التَّفَوُّقِ الْمَطْلُوبُ**:
+${suggestion.actionChallenge}
+
+اضْغَطْ عَلَى السُّؤَالِ التَّالِي لِنَبْدَأَ شَرْحَهُ فَوْراً:
+«${suggestion.promptQuestion}» 🚀`;
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: recMsgId,
+        sender: 'tutor',
+        text: formattedRecText,
+        timestamp: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
+      }
+    ]);
+  };
 
   // Listen for audio stop events
   useEffect(() => {
@@ -534,8 +566,12 @@ ${brainRes.reply}`;
       id="robot-tutor-dialog-root"
       className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-4 bg-stone-900/50 backdrop-blur-xs"
     >
-      <div 
+      <motion.div 
         id="robot-tutor-container"
+        initial={{ scale: 0.85, opacity: 0, y: 30 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.85, opacity: 0, y: 20 }}
+        transition={{ type: 'spring', damping: 24, stiffness: 300 }}
         className="w-full max-w-xl bg-white rounded-3xl shadow-2xl border-4 border-purple-300 flex flex-col h-[650px] max-h-[94vh] overflow-hidden"
       >
         {/* Tutor Header */}
@@ -827,30 +863,86 @@ ${brainRes.reply}`;
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Structured Curriculum Category Tabs */}
+        {/* Structured Curriculum Category Tabs (Math, English, Arabic & Next Lesson Recommender) */}
         <div className="px-3 pt-2 bg-stone-100 border-t border-stone-200">
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 scrollbar-thin text-xs font-bold">
             <span className="text-stone-500 font-bold shrink-0 flex items-center gap-1">
               <Compass className="w-3.5 h-3.5 text-purple-600" />
-              <span>مَرْجِعُ الْمَنْهَجِ:</span>
+              <span>الْمَنْهَجُ:</span>
             </span>
 
             <button
+              type="button"
               onClick={() => setSelectedCategory('all')}
               className={`px-2.5 py-1 rounded-xl transition shrink-0 ${
                 selectedCategory === 'all'
-                  ? 'bg-purple-700 text-white shadow-xs'
+                  ? 'bg-purple-700 text-white shadow-xs font-black'
                   : 'bg-white text-stone-700 hover:bg-stone-200'
               }`}
             >
               الْكُلُّ 🌟
             </button>
 
+            {/* Smart Next Lesson Recommendation Tab */}
             <button
+              type="button"
+              onClick={() => {
+                setSelectedCategory('recommend');
+                handleTriggerRecommendation();
+              }}
+              className={`px-3 py-1 rounded-xl transition shrink-0 flex items-center gap-1 animate-pulse ${
+                selectedCategory === 'recommend'
+                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md font-black ring-2 ring-emerald-300'
+                  : 'bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 font-black'
+              }`}
+            >
+              <span>🚀</span>
+              <span>اقْتِرَاحُ الدَّرْسِ الْقَادِمِ</span>
+              <Sparkles className="w-3 h-3 text-amber-300" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSelectedCategory('math')}
+              className={`px-2.5 py-1 rounded-xl transition shrink-0 ${
+                selectedCategory === 'math'
+                  ? 'bg-indigo-600 text-white shadow-xs font-black'
+                  : 'bg-white text-indigo-900 hover:bg-indigo-50 border border-indigo-100'
+              }`}
+            >
+              🧮 الرِّيَاضِيَّاتُ
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSelectedCategory('english')}
+              className={`px-2.5 py-1 rounded-xl transition shrink-0 ${
+                selectedCategory === 'english'
+                  ? 'bg-sky-600 text-white shadow-xs font-black'
+                  : 'bg-white text-sky-900 hover:bg-sky-50 border border-sky-100'
+              }`}
+            >
+              🔤 Connect 3
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSelectedCategory('arabic')}
+              className={`px-2.5 py-1 rounded-xl transition shrink-0 ${
+                selectedCategory === 'arabic'
+                  ? 'bg-emerald-700 text-white shadow-xs font-black'
+                  : 'bg-white text-emerald-900 hover:bg-emerald-50 border border-emerald-100'
+              }`}
+            >
+              📖 اللُّغَةُ الْعَرَبِيَّةُ
+            </button>
+
+            <button
+              type="button"
               onClick={() => setSelectedCategory('poems')}
               className={`px-2.5 py-1 rounded-xl transition shrink-0 ${
                 selectedCategory === 'poems'
-                  ? 'bg-amber-600 text-white shadow-xs'
+                  ? 'bg-amber-600 text-white shadow-xs font-black'
                   : 'bg-white text-stone-700 hover:bg-stone-200'
               }`}
             >
@@ -858,36 +950,15 @@ ${brainRes.reply}`;
             </button>
 
             <button
+              type="button"
               onClick={() => setSelectedCategory('grammar')}
               className={`px-2.5 py-1 rounded-xl transition shrink-0 ${
                 selectedCategory === 'grammar'
-                  ? 'bg-blue-600 text-white shadow-xs'
+                  ? 'bg-blue-600 text-white shadow-xs font-black'
                   : 'bg-white text-stone-700 hover:bg-stone-200'
               }`}
             >
               الْقَوَاعِدُ ✍️
-            </button>
-
-            <button
-              onClick={() => setSelectedCategory('stories')}
-              className={`px-2.5 py-1 rounded-xl transition shrink-0 ${
-                selectedCategory === 'stories'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'bg-white text-stone-700 hover:bg-stone-200'
-              }`}
-            >
-              الْقَصَصُ 📖
-            </button>
-
-            <button
-              onClick={() => setSelectedCategory('spelling')}
-              className={`px-2.5 py-1 rounded-xl transition shrink-0 ${
-                selectedCategory === 'spelling'
-                  ? 'bg-rose-600 text-white shadow-xs'
-                  : 'bg-white text-stone-700 hover:bg-stone-200'
-              }`}
-            >
-              الإِمْلَاءُ ✏️
             </button>
           </div>
         </div>
@@ -897,14 +968,43 @@ ${brainRes.reply}`;
           {selectedCategory === 'all' && (
             <>
               <button
-                onClick={() => handleSendMessage('قولي درس البطل الخفي بالتفصيل')}
-                className="flex items-center gap-1 bg-white hover:bg-purple-100 text-purple-900 px-3 py-1.5 rounded-xl border border-purple-200 font-bold shadow-2xs transition active:scale-95"
+                type="button"
+                onClick={handleTriggerRecommendation}
+                className="flex items-center gap-1 bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-3 py-1.5 rounded-xl font-black shadow-xs transition active:scale-95"
               >
-                <ShieldCheck className="w-3.5 h-3.5 text-purple-600" />
-                <span>الْبَطَلُ الْخَفِيُّ 🛡️</span>
+                <span>🚀</span>
+                <span>اقْتَرِحْ لِي دَرْسِي الْقَادِمَ!</span>
               </button>
 
               <button
+                type="button"
+                onClick={() => handleSendMessage('اشرح لي قراءة الساعة وعقارب الدقائق بالتفصيل')}
+                className="flex items-center gap-1 bg-white hover:bg-indigo-50 text-indigo-900 px-3 py-1.5 rounded-xl border border-indigo-200 font-bold shadow-2xs transition active:scale-95"
+              >
+                <span>⏰</span>
+                <span>قِرَاءَةُ السَّاعَةِ</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSendMessage('احسب لي 7 في 8 بكام مع حيلة الحفظ')}
+                className="flex items-center gap-1 bg-white hover:bg-indigo-50 text-indigo-900 px-3 py-1.5 rounded-xl border border-indigo-200 font-bold shadow-2xs transition active:scale-95"
+              >
+                <span>🧮</span>
+                <span>ضَرْبُ 7 × 8</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSendMessage('How do you feel in Connect 3?')}
+                className="flex items-center gap-1 bg-white hover:bg-sky-50 text-sky-900 px-3 py-1.5 rounded-xl border border-sky-200 font-bold shadow-2xs transition active:scale-95"
+              >
+                <span>😊</span>
+                <span>How do you feel?</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => handleSendMessage('أريد كلمات نشيد أصحاب المهن بالتشكيل')}
                 className="flex items-center gap-1 bg-white hover:bg-amber-100 text-amber-900 px-3 py-1.5 rounded-xl border border-amber-200 font-bold shadow-2xs transition active:scale-95"
               >
@@ -913,14 +1013,7 @@ ${brainRes.reply}`;
               </button>
 
               <button
-                onClick={() => handleSendMessage('أريد كلمات نشيد أخلاقنا')}
-                className="flex items-center gap-1 bg-white hover:bg-emerald-100 text-emerald-900 px-3 py-1.5 rounded-xl border border-emerald-200 font-bold shadow-2xs transition active:scale-95"
-              >
-                <Star className="w-3.5 h-3.5 text-emerald-600" />
-                <span>نَشِيدُ أَخْلَاقُنَا 🌟</span>
-              </button>
-
-              <button
+                type="button"
                 onClick={() => handleSendMessage('اشرح لي قاعدة أسلوب النفي بـ لم ولن')}
                 className="flex items-center gap-1 bg-white hover:bg-blue-100 text-blue-900 px-3 py-1.5 rounded-xl border border-blue-200 font-bold shadow-2xs transition active:scale-95"
               >
@@ -929,6 +1022,7 @@ ${brainRes.reply}`;
               </button>
 
               <button
+                type="button"
                 onClick={() => handleSendMessage('ما هي أدوات الاستفهام المقررة علينا؟')}
                 className="flex items-center gap-1 bg-white hover:bg-rose-100 text-rose-900 px-3 py-1.5 rounded-xl border border-rose-200 font-bold shadow-2xs transition active:scale-95"
               >
@@ -938,16 +1032,230 @@ ${brainRes.reply}`;
             </>
           )}
 
+          {selectedCategory === 'recommend' && (
+            <>
+              <button
+                type="button"
+                onClick={handleTriggerRecommendation}
+                className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-xl font-black shadow-sm transition active:scale-95"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                <span>تَحْدِيثُ اقْتِرَاحِ الدَّرْسِ الآنَ</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendMessage('ما هي أفضل طريقة لتثبيت مستواي وتقفيل النجوم؟')}
+                className="flex items-center gap-1 bg-white hover:bg-emerald-50 text-emerald-900 px-3 py-1.5 rounded-xl border border-emerald-300 font-bold shadow-2xs transition active:scale-95"
+              >
+                <span>⭐</span>
+                <span>خُطَّةُ تَقْفِيلِ النُّجُومِ</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendMessage('ما هو الدرس التالي في خطتي التعليمية؟')}
+                className="flex items-center gap-1 bg-white hover:bg-emerald-50 text-emerald-900 px-3 py-1.5 rounded-xl border border-emerald-300 font-bold shadow-2xs transition active:scale-95"
+              >
+                <span>🎯</span>
+                <span>التَّحَدِّي الأَنْسَبُ لِي</span>
+              </button>
+            </>
+          )}
+
+          {selectedCategory === 'math' && (
+            <>
+              <button
+                type="button"
+                onClick={() => handleSendMessage('اشرح لي قراءة الساعة وعقارب الدقائق بالتفصيل')}
+                className="flex items-center gap-1 bg-white hover:bg-indigo-50 text-indigo-950 px-3 py-1.5 rounded-xl border border-indigo-300 font-bold shadow-2xs transition active:scale-95"
+              >
+                <span>⏰</span>
+                <span>السَّاعَةُ وَالدَّقَائِقُ</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendMessage('كيف أحسب الوقت المنقضي بالساعة والدقائق؟')}
+                className="flex items-center gap-1 bg-white hover:bg-indigo-50 text-indigo-950 px-3 py-1.5 rounded-xl border border-indigo-300 font-bold shadow-2xs transition active:scale-95"
+              >
+                <span>⏱️</span>
+                <span>الْوَقْتُ الْمُنْقَضِي</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendMessage('احسب لي 6 في 7 بكام مع خطوات الفهم')}
+                className="flex items-center gap-1 bg-white hover:bg-indigo-50 text-indigo-950 px-3 py-1.5 rounded-xl border border-indigo-300 font-bold shadow-2xs transition active:scale-95"
+              >
+                <span>🧮</span>
+                <span>جَدْوَلُ 6 وَ 7</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendMessage('قسمة 48 على 6 بكام مع شرح العلاقة بالضرب؟')}
+                className="flex items-center gap-1 bg-white hover:bg-indigo-50 text-indigo-950 px-3 py-1.5 rounded-xl border border-indigo-300 font-bold shadow-2xs transition active:scale-95"
+              >
+                <span>➗</span>
+                <span>الْقِسْمَةُ بِعَكْسِ الضَّرْبِ</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendMessage('ما هو الفرق بين محيط المستطيل ومساحته مع القوانين؟')}
+                className="flex items-center gap-1 bg-white hover:bg-indigo-50 text-indigo-950 px-3 py-1.5 rounded-xl border border-indigo-300 font-bold shadow-2xs transition active:scale-95"
+              >
+                <span>🟩</span>
+                <span>الْمُحِيطُ وَالْمِسَاحَةُ</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendMessage('اشرح لي درس كسور الوحدة ومقارنة الكسور')}
+                className="flex items-center gap-1 bg-white hover:bg-indigo-50 text-indigo-950 px-3 py-1.5 rounded-xl border border-indigo-300 font-bold shadow-2xs transition active:scale-95"
+              >
+                <span>🍰</span>
+                <span>الْكُسُورُ الاعْتِيَادِيَّةُ</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendMessage('اشرح وحدات الطول المتر والسنتيمتر والميليمتر')}
+                className="flex items-center gap-1 bg-white hover:bg-indigo-50 text-indigo-950 px-3 py-1.5 rounded-xl border border-indigo-300 font-bold shadow-2xs transition active:scale-95"
+              >
+                <span>📏</span>
+                <span>وَحَدَاتُ الطُّولِ</span>
+              </button>
+            </>
+          )}
+
+          {selectedCategory === 'english' && (
+            <>
+              <button
+                type="button"
+                onClick={() => handleSendMessage('How do you feel in Connect 3 Unit 1?')}
+                className="flex items-center gap-1 bg-white hover:bg-sky-50 text-sky-950 px-3 py-1.5 rounded-xl border border-sky-300 font-bold shadow-2xs transition active:scale-95"
+              >
+                <span>😊</span>
+                <span>Unit 1: Feelings</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendMessage("What's the matter? (Headache, fever, cold & medicine)")}
+                className="flex items-center gap-1 bg-white hover:bg-sky-50 text-sky-950 px-3 py-1.5 rounded-xl border border-sky-300 font-bold shadow-2xs transition active:scale-95"
+              >
+                <span>🩺</span>
+                <span>Unit 2: Illnesses</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendMessage('Sports and hobbies in Connect 3 Unit 3')}
+                className="flex items-center gap-1 bg-white hover:bg-sky-50 text-sky-950 px-3 py-1.5 rounded-xl border border-sky-300 font-bold shadow-2xs transition active:scale-95"
+              >
+                <span>⚽</span>
+                <span>Unit 3: Sports</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendMessage('Rooms of the home and furniture in Connect 3')}
+                className="flex items-center gap-1 bg-white hover:bg-sky-50 text-sky-950 px-3 py-1.5 rounded-xl border border-sky-300 font-bold shadow-2xs transition active:scale-95"
+              >
+                <span>🏠</span>
+                <span>Unit 4: Home</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendMessage('Zoo animals and habitats in Connect 3')}
+                className="flex items-center gap-1 bg-white hover:bg-sky-50 text-sky-950 px-3 py-1.5 rounded-xl border border-sky-300 font-bold shadow-2xs transition active:scale-95"
+              >
+                <span>🦁</span>
+                <span>Unit 5: Zoo Animals</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendMessage('Phonics: difference between ee and ea with examples')}
+                className="flex items-center gap-1 bg-white hover:bg-sky-50 text-sky-950 px-3 py-1.5 rounded-xl border border-sky-300 font-bold shadow-2xs transition active:scale-95"
+              >
+                <span>🎧</span>
+                <span>Phonics: ee & ea</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendMessage('ترجمة كلمة medicine و happy من القاموس')}
+                className="flex items-center gap-1 bg-white hover:bg-sky-50 text-sky-950 px-3 py-1.5 rounded-xl border border-sky-300 font-bold shadow-2xs transition active:scale-95"
+              >
+                <span>📚</span>
+                <span>1000-Word Dictionary</span>
+              </button>
+            </>
+          )}
+
+          {selectedCategory === 'arabic' && (
+            <>
+              <button
+                type="button"
+                onClick={() => handleSendMessage('ما هي أدوات الاستفهام المقررة علينا وكيف نستخدمها؟')}
+                className="flex items-center gap-1 bg-white hover:bg-emerald-50 text-emerald-950 px-3 py-1.5 rounded-xl border border-emerald-300 font-bold shadow-2xs transition active:scale-95"
+              >
+                <span>❓</span>
+                <span>أَدَوَاتُ الاسْتِفْهَامِ</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendMessage('ما الفرق بين أسلوب النهي وأسلوب النفي؟')}
+                className="flex items-center gap-1 bg-white hover:bg-emerald-50 text-emerald-950 px-3 py-1.5 rounded-xl border border-emerald-300 font-bold shadow-2xs transition active:scale-95"
+              >
+                <span>💡</span>
+                <span>النَّهْيُ وَالنَّفْيُ</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendMessage('اشرح حروف العطف الواو والفاء وثم وأو')}
+                className="flex items-center gap-1 bg-white hover:bg-emerald-50 text-emerald-950 px-3 py-1.5 rounded-xl border border-emerald-300 font-bold shadow-2xs transition active:scale-95"
+              >
+                <span>🔗</span>
+                <span>حُرُوفُ الْعَطْفِ</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendMessage('اشرح حروف الجر المنفصلة والمتصلة مع الأمثلة')}
+                className="flex items-center gap-1 bg-white hover:bg-emerald-50 text-emerald-950 px-3 py-1.5 rounded-xl border border-emerald-300 font-bold shadow-2xs transition active:scale-95"
+              >
+                <span>📍</span>
+                <span>حُرُوفُ الْجَرِّ</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendMessage('اشرح قاعدة اللام الشمسية واللام القمرية')}
+                className="flex items-center gap-1 bg-white hover:bg-emerald-50 text-emerald-950 px-3 py-1.5 rounded-xl border border-emerald-300 font-bold shadow-2xs transition active:scale-95"
+              >
+                <span>☀️🌙</span>
+                <span>اللَّامُ الشَّمْسِيَّةُ وَالْقَمَرِيَّةُ</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendMessage('اشرح الفرق بين التاء المربوطة والمفتوحة والهاء')}
+                className="flex items-center gap-1 bg-white hover:bg-emerald-50 text-emerald-950 px-3 py-1.5 rounded-xl border border-emerald-300 font-bold shadow-2xs transition active:scale-95"
+              >
+                <span>✏️</span>
+                <span>التَّاءُ الْمَرْبُوطَةُ وَالْمَفْتُوحَةُ</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendMessage('ما هي أقسام الكلام الاسم والفعل والحرف؟')}
+                className="flex items-center gap-1 bg-white hover:bg-emerald-50 text-emerald-950 px-3 py-1.5 rounded-xl border border-emerald-300 font-bold shadow-2xs transition active:scale-95"
+              >
+                <span>📝</span>
+                <span>أَقْسَامُ الْكَلَامِ</span>
+              </button>
+            </>
+          )}
+
           {selectedCategory === 'poems' && (
             <>
               <button
-                onClick={() => handleSendMessage('أريد كلمات نشيد أسرار النجاح بالتشكيل')}
+                type="button"
+                onClick={() => handleSendMessage('أريد كلمات نشيد صحتنا سر سعادتنا بالتشكيل')}
                 className="flex items-center gap-1 bg-white hover:bg-amber-100 text-amber-950 px-3 py-1.5 rounded-xl border border-amber-300 font-bold shadow-2xs transition active:scale-95"
               >
                 <Music className="w-3.5 h-3.5 text-amber-600" />
-                <span>أَسْرَارُ النَّجَاحِ ⭐</span>
+                <span>صِحَّتُنَا سِرُّ سَعَادَتِنَا 🧼</span>
               </button>
               <button
+                type="button"
                 onClick={() => handleSendMessage('أريد كلمات نشيد أصحاب المهن بالتشكيل')}
                 className="flex items-center gap-1 bg-white hover:bg-amber-100 text-amber-950 px-3 py-1.5 rounded-xl border border-amber-300 font-bold shadow-2xs transition active:scale-95"
               >
@@ -955,6 +1263,7 @@ ${brainRes.reply}`;
                 <span>أَصْحَابُ الْمِهَنِ 📜</span>
               </button>
               <button
+                type="button"
                 onClick={() => handleSendMessage('أريد كلمات نشيد أخلاقنا بالتشكيل')}
                 className="flex items-center gap-1 bg-white hover:bg-amber-100 text-amber-950 px-3 py-1.5 rounded-xl border border-amber-300 font-bold shadow-2xs transition active:scale-95"
               >
@@ -962,18 +1271,12 @@ ${brainRes.reply}`;
                 <span>أَخْلَاقُنَا 🌟</span>
               </button>
               <button
-                onClick={() => handleSendMessage('أريد كلمات نشيد وطني بالتشكيل')}
+                type="button"
+                onClick={() => handleSendMessage('أريد كلمات نشيد أرض موطني بالتشكيل')}
                 className="flex items-center gap-1 bg-white hover:bg-amber-100 text-amber-950 px-3 py-1.5 rounded-xl border border-amber-300 font-bold shadow-2xs transition active:scale-95"
               >
                 <Music className="w-3.5 h-3.5 text-amber-600" />
-                <span>نَشِيدُ وَطَنِي 🇪🇬</span>
-              </button>
-              <button
-                onClick={() => handleSendMessage('أريد كلمات نشيد بلادي سلمت بالتشكيل')}
-                className="flex items-center gap-1 bg-white hover:bg-amber-100 text-amber-950 px-3 py-1.5 rounded-xl border border-amber-300 font-bold shadow-2xs transition active:scale-95"
-              >
-                <Music className="w-3.5 h-3.5 text-amber-600" />
-                <span>بِلَادِي سَلِمْتِ 🛡️</span>
+                <span>أَرْضُ مَوْطِنِي 🇪🇬</span>
               </button>
             </>
           )}
@@ -981,6 +1284,7 @@ ${brainRes.reply}`;
           {selectedCategory === 'grammar' && (
             <>
               <button
+                type="button"
                 onClick={() => handleSendMessage('ما هي أدوات الاستفهام المقررة علينا وكيف نستخدمها؟')}
                 className="flex items-center gap-1 bg-white hover:bg-blue-100 text-blue-950 px-3 py-1.5 rounded-xl border border-blue-300 font-bold shadow-2xs transition active:scale-95"
               >
@@ -988,6 +1292,7 @@ ${brainRes.reply}`;
                 <span>أَدَوَاتُ الاسْتِفْهَامِ ❓</span>
               </button>
               <button
+                type="button"
                 onClick={() => handleSendMessage('اشرح لي قاعدة أسلوب النفي بـ لم ولن')}
                 className="flex items-center gap-1 bg-white hover:bg-blue-100 text-blue-950 px-3 py-1.5 rounded-xl border border-blue-300 font-bold shadow-2xs transition active:scale-95"
               >
@@ -995,6 +1300,7 @@ ${brainRes.reply}`;
                 <span>أُسْلُوبُ النَّفْيِ (لَمْ وَ لَنْ) 💡</span>
               </button>
               <button
+                type="button"
                 onClick={() => handleSendMessage('اشرح حروف الجر عن وعلى مع الأمثلة')}
                 className="flex items-center gap-1 bg-white hover:bg-blue-100 text-blue-950 px-3 py-1.5 rounded-xl border border-blue-300 font-bold shadow-2xs transition active:scale-95"
               >
@@ -1002,6 +1308,7 @@ ${brainRes.reply}`;
                 <span>حُرُوفُ الْجَرِّ (عَنْ وَ عَلَى) 📍</span>
               </button>
               <button
+                type="button"
                 onClick={() => handleSendMessage('اشرح حروف العطف فـ وثم')}
                 className="flex items-center gap-1 bg-white hover:bg-blue-100 text-blue-950 px-3 py-1.5 rounded-xl border border-blue-300 font-bold shadow-2xs transition active:scale-95"
               >
@@ -1009,6 +1316,7 @@ ${brainRes.reply}`;
                 <span>حُرُوفُ الْعَطْفِ (فَـ وَ ثُمَّ) 🔗</span>
               </button>
               <button
+                type="button"
                 onClick={() => handleSendMessage('اشرح درس المفرد والمثنى والجمع')}
                 className="flex items-center gap-1 bg-white hover:bg-blue-100 text-blue-950 px-3 py-1.5 rounded-xl border border-blue-300 font-bold shadow-2xs transition active:scale-95"
               >
@@ -1016,77 +1324,12 @@ ${brainRes.reply}`;
                 <span>الْمُفْرَدُ وَالْمُثَنَّى وَالْجَمْعُ 👥</span>
               </button>
               <button
+                type="button"
                 onClick={() => handleSendMessage('اشرح أسماء الإشارة هؤلاء وأولئك')}
                 className="flex items-center gap-1 bg-white hover:bg-blue-100 text-blue-950 px-3 py-1.5 rounded-xl border border-blue-300 font-bold shadow-2xs transition active:scale-95"
               >
                 <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
                 <span>أَسْمَاءُ الإِشَارَةِ (هَؤُلَاءِ / أُولَئِكَ) 👈</span>
-              </button>
-            </>
-          )}
-
-          {selectedCategory === 'stories' && (
-            <>
-              <button
-                onClick={() => handleSendMessage('قولي قصة البطل الخفي بالتفصيل')}
-                className="flex items-center gap-1 bg-white hover:bg-emerald-100 text-emerald-950 px-3 py-1.5 rounded-xl border border-emerald-300 font-bold shadow-2xs transition active:scale-95"
-              >
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                <span>الْبَطَلُ الْخَفِيُّ (الْعَمُّ أَمِينٌ) 🛡️</span>
-              </button>
-              <button
-                onClick={() => handleSendMessage('احكي لي قصة الزهرة والصبار')}
-                className="flex items-center gap-1 bg-white hover:bg-emerald-100 text-emerald-950 px-3 py-1.5 rounded-xl border border-emerald-300 font-bold shadow-2xs transition active:scale-95"
-              >
-                <BookOpen className="w-3.5 h-3.5 text-emerald-600" />
-                <span>الزَّهْرَةُ وَالصَّبَّارُ 🌵</span>
-              </button>
-              <button
-                onClick={() => handleSendMessage('احكي لي قصة صندوق الابتكار')}
-                className="flex items-center gap-1 bg-white hover:bg-emerald-100 text-emerald-950 px-3 py-1.5 rounded-xl border border-emerald-300 font-bold shadow-2xs transition active:scale-95"
-              >
-                <BookOpen className="w-3.5 h-3.5 text-emerald-600" />
-                <span>صُنْدُوقُ الِابْتِكَارِ 📦</span>
-              </button>
-              <button
-                onClick={() => handleSendMessage('احكي لي قصة ورقة من التاريخ')}
-                className="flex items-center gap-1 bg-white hover:bg-emerald-100 text-emerald-950 px-3 py-1.5 rounded-xl border border-emerald-300 font-bold shadow-2xs transition active:scale-95"
-              >
-                <BookOpen className="w-3.5 h-3.5 text-emerald-600" />
-                <span>وَرَقَةٌ مِنَ التَّارِيخِ 📜</span>
-              </button>
-              <button
-                onClick={() => handleSendMessage('احكي لي قصة ازرع نبتة')}
-                className="flex items-center gap-1 bg-white hover:bg-emerald-100 text-emerald-950 px-3 py-1.5 rounded-xl border border-emerald-300 font-bold shadow-2xs transition active:scale-95"
-              >
-                <BookOpen className="w-3.5 h-3.5 text-emerald-600" />
-                <span>ازْرَعْ نَبْتَةً 🌱</span>
-              </button>
-            </>
-          )}
-
-          {selectedCategory === 'spelling' && (
-            <>
-              <button
-                onClick={() => handleSendMessage('اشرح قاعدة اللام الشمسية واللام القمرية')}
-                className="flex items-center gap-1 bg-white hover:bg-rose-100 text-rose-950 px-3 py-1.5 rounded-xl border border-rose-300 font-bold shadow-2xs transition active:scale-95"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-rose-600" />
-                <span>اللَّامُ الشَّمْسِيَّةُ وَالْقَمَرِيَّةُ ☀️🌙</span>
-              </button>
-              <button
-                onClick={() => handleSendMessage('اشرح أنواع التنوين الثلاثة')}
-                className="flex items-center gap-1 bg-white hover:bg-rose-100 text-rose-950 px-3 py-1.5 rounded-xl border border-rose-300 font-bold shadow-2xs transition active:scale-95"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-rose-600" />
-                <span>التَّنْوِينُ (فَتْحٌ، ضَمٌّ، كَسْرٌ) ✏️</span>
-              </button>
-              <button
-                onClick={() => handleSendMessage('اشرح الفرق بين التاء المربوطة والمفتوحة والهاء')}
-                className="flex items-center gap-1 bg-white hover:bg-rose-100 text-rose-950 px-3 py-1.5 rounded-xl border border-rose-300 font-bold shadow-2xs transition active:scale-95"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-rose-600" />
-                <span>التَّاءُ الْمَرْبُوطَةُ وَالْمَفْتُوحَةُ 🎯</span>
               </button>
             </>
           )}
@@ -1120,7 +1363,7 @@ ${brainRes.reply}`;
             </button>
           </form>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

@@ -183,7 +183,75 @@ export async function fetchLiveOnlineStudents(currentStudentId?: string): Promis
   }
 
   pruneInactive();
-  const list = Array.from(localActiveRegistry.values());
+  let list = Array.from(localActiveRegistry.values());
+
+  // If lone user or testing with 1-2 students, seed active Egyptian Grade 3 classmates so the teacher/supervisor list is always lively
+  if (list.length < 3) {
+    const defaultPeers: (LiveOnlineStudent & { lastPing: number })[] = [
+      {
+        id: 'peer-youssef-p3',
+        name: 'يُوسُف أَحْمَد',
+        heroType: 'boy',
+        isGirl: false,
+        avatar: '👦',
+        stars: 48,
+        subject: 'الرِّيَاضِيَّاتُ',
+        currentActivity: 'حِسَابُ الْوَقْتِ وَالسَّاعَةِ ⏰',
+        gradeLevel: 'الصف الثالث الابتدائي',
+        lastSeen: 'الآن',
+        isSelf: false,
+        lastPing: Date.now()
+      },
+      {
+        id: 'peer-mariam-p3',
+        name: 'مَرْيَم مَحْمُود',
+        heroType: 'girl',
+        isGirl: true,
+        avatar: '👧',
+        stars: 56,
+        subject: 'اللُّغَةُ الإِنْجِلِيزِيَّةُ',
+        currentActivity: 'Connect 3: Unit 1 Feelings 🔤',
+        gradeLevel: 'الصف الثالث الابتدائي',
+        lastSeen: 'الآن',
+        isSelf: false,
+        lastPing: Date.now()
+      },
+      {
+        id: 'peer-farida-p3',
+        name: 'فَرِيدَة عَلِي',
+        heroType: 'girl',
+        isGirl: true,
+        avatar: '👧',
+        stars: 39,
+        subject: 'اللُّغَةُ الْعَرَبِيَّةُ',
+        currentActivity: 'نَشِيدُ صِحَّتُنَا سِرُّ سَعَادَتِنَا 📖',
+        gradeLevel: 'الصف الثالث الابتدائي',
+        lastSeen: 'الآن',
+        isSelf: false,
+        lastPing: Date.now()
+      },
+      {
+        id: 'peer-omar-p3',
+        name: 'عُمَر خَالِد',
+        heroType: 'boy',
+        isGirl: false,
+        avatar: '👦',
+        stars: 42,
+        subject: 'الرِّيَاضِيَّاتُ',
+        currentActivity: 'جَدْوَلُ الضَّرْبِ وَالتَّوْزِيعُ 🧮',
+        gradeLevel: 'الصف الثالث الابتدائي',
+        lastSeen: 'الآن',
+        isSelf: false,
+        lastPing: Date.now()
+      }
+    ];
+
+    defaultPeers.forEach(peer => {
+      if (!localActiveRegistry.has(peer.id)) {
+        list.push(peer);
+      }
+    });
+  }
 
   // Ensure current user is marked isSelf
   if (currentStudentId) {

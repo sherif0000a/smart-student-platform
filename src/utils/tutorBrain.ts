@@ -1,6 +1,7 @@
 // Comprehensive Omniscient Tutor Brain for Egyptian Primary 3
 // Covers 100% of the Ministry Curriculum for Math, Connect 3 English & Arabic
 import { englishDictionary1000 } from '../curriculum/english/englishDictionary1000';
+import { UserProfile } from '../types';
 
 export interface TutorResponse {
   handled: boolean;
@@ -9,8 +10,18 @@ export interface TutorResponse {
   topic?: string;
 }
 
+export interface NextLessonSuggestion {
+  subject: 'math' | 'english' | 'arabic';
+  subjectArabic: string;
+  title: string;
+  levelBadge: string;
+  reason: string;
+  promptQuestion: string;
+  actionChallenge: string;
+}
+
 // Arabic normalization helper
-function normText(txt: string): string {
+export function normText(txt: string): string {
   if (!txt) return '';
   return txt
     .toLowerCase()
@@ -24,13 +35,137 @@ function normText(txt: string): string {
     .trim();
 }
 
-// 1. Math Brain: Clock, Arithmetic, Fractions, Geometry, Perimeter & Area
+// Next Lesson Recommender based on student's current stars, progress, and active subject
+export function recommendNextLesson(profile: UserProfile): NextLessonSuggestion {
+  const stars = profile.totalStars || 0;
+  const completed = profile.completedLessons || [];
+  const subject = profile.activeSubject || 'math';
+  const isGirl = profile.heroType === 'girl';
+  const heroPraise = isGirl ? 'بَطَلَتَنَا الذَّكِيَّةَ' : 'بَطَلَنَا الْمُجْتَهِدَ';
+
+  if (subject === 'math') {
+    if (stars < 60 || completed.length === 0) {
+      return {
+        subject: 'math',
+        subjectArabic: 'الرِّيَاضِيَّاتُ',
+        title: 'قِرَاءَةُ السَّاعَةِ وَعَقَارِبِ الدَّقَائِقِ ⏰',
+        levelBadge: 'الْمُسْتَوَى الأَوَّلُ: الْبِدَايَةُ الذَّهَبِيَّةُ ⭐',
+        reason: `لأَنَّكَ فِي بِدَايَةِ رِحْلَةِ التَّأَسُّسِ يَا ${heroPraise}، فَمَعْرِفَةُ قِرَاءَةِ السَّاعَةِ وَحِسَابِ الدَّقَائِقِ تَمْنَحُكَ ثِقَةً كَبِيرَةً وَمَهَارَةً حَيَاتِيَّةً يَوْمِيَّةً!`,
+        promptQuestion: 'كَيْفَ أَقْرَأُ السَّاعَةَ وَعَقْرَبَ الدَّقَائِقِ خُطْوَةً بِخُطْوَةٍ؟',
+        actionChallenge: 'تَحَدِّيكَ الْقَادِمُ: اخْتَرْ دَرْسَ السَّاعَةِ وَحَقِّقْ 3 نُجُومٍ بِمَعْرِفَةِ الرُّبْعِ وَالنِّصْفِ! 🎯'
+      };
+    } else if (stars < 130) {
+      return {
+        subject: 'math',
+        subjectArabic: 'الرِّيَاضِيَّاتُ',
+        title: 'جَدَاوِلُ الضَّرْبِ (6، 7، 8، 9) وَخَاصِّيَّةُ التَّوْزِيعِ 🧮',
+        levelBadge: 'الْمُسْتَوَى الْمُتَوَسِّطُ: فَارِسُ الْحِسَابِ 🚀',
+        reason: `مُسْتَوَاكَ مُتَقَدِّمٌ جِدّاً! إِتْقَانُ جَدَاوِلِ الضَّرْبِ الأَعْلَى وَخَاصِّيَّةِ التَّوْزِيعِ هُوَ الْمِفْتَاحُ لِتَقْفِيلِ دَرَجَةِ الرِّيَاضِيَّاتِ كَامِلَةً.`,
+        promptQuestion: 'مَا هِيَ خَاصِّيَّةُ التَّوْزِيعِ فِي الضَّرْبِ وَكَيْفَ أُطَبِّقُهَا؟',
+        actionChallenge: 'تَحَدِّيكَ الْقَادِمُ: قَفِّلْ تَدْرِيبَاتِ جَدْوَلِ 7 وَ 8 فِي لُعْبَةِ التَّحَدِّي! 🏆'
+      };
+    } else {
+      return {
+        subject: 'math',
+        subjectArabic: 'الرِّيَاضِيَّاتُ',
+        title: 'الْمُحِيطُ وَالْمِسَاحَةُ وَالْكُسُورُ الاعْتِيَادِيَّةُ 📐',
+        levelBadge: 'الْمُسْتَوَى الأَعْلَى: عَبْقَرِيُّ الْمَنْهَجِ 👑',
+        reason: `مَا شَاءَ اللَّهُ! أَنْتَ فِي صَدَارَةِ الأَبْطَالِ. حَانَ وَقْتُ إِبْدَاعِ الْهَنْدَسَةِ وَتَمْيِيزِ الْمُحِيطِ مِنَ الْمِسَاحَةِ لِلْمُرَبَّعِ وَالْمُسْتَطِيلِ.`,
+        promptQuestion: 'مَا هُوَ الْفَرْقُ بَيْنَ مُحِيطِ الْمُسْتَطِيلِ وَمِسَاحَتِهِ مَعَ الأَمْثِلَةِ؟',
+        actionChallenge: 'تَحَدِّيكَ الْقَادِمُ: حِسَابُ مُحِيطِ حَدِيقَةٍ طُولُهَا 8 م وَعَرْضُهَا 5 م دُونَ أَيِّ خَطَأٍ! 🌟'
+      };
+    }
+  } else if (subject === 'english') {
+    if (stars < 60 || completed.length === 0) {
+      return {
+        subject: 'english',
+        subjectArabic: 'Connect 3 English',
+        title: 'Unit 1: Feelings & How do you feel? 😊',
+        levelBadge: 'Beginner Explorer ⭐',
+        reason: `الْوَحْدَةُ الأُولَى تُعَلِّمُكَ كَيْفَ تُعَبِّرُ عَنْ شُعُورِكَ بِالإِنْجِلِيزِيَّةِ بِطَلَاقَةٍ مِثْلَ الْمُتَحَدِّثِ الأَصْلِيِّ!`,
+        promptQuestion: 'How can I express my feelings in English Connect 3?',
+        actionChallenge: 'Your Mission: Practice 5 feeling words (happy, thirsty, hungry, tired, excited) with audio pronunciation! 🎧'
+      };
+    } else if (stars < 130) {
+      return {
+        subject: 'english',
+        subjectArabic: 'Connect 3 English',
+        title: "Unit 2: What's the matter? & Phonics (ee / ea) 🩺",
+        levelBadge: 'Confident Speaker 🚀',
+        reason: `لَقَدْ أَصْبَحْتَ مُمَيَّزاً! حَانَ وَقْتُ تَعَلُّمِ كَلِمَاتِ الصِّحَّةِ وَالأَمْرَاضِ وَقَاعِدَةِ نُطْقِ الْفُونِكْس (ee & ea).`,
+        promptQuestion: "How do I ask someone about their health: What's the matter?",
+        actionChallenge: 'Your Mission: Learn the difference between sleep (ee) and eat (ea) in pronunciation! 🔤'
+      };
+    } else {
+      return {
+        subject: 'english',
+        subjectArabic: 'Connect 3 English',
+        title: 'Unit 4 & 5: Home, Zoo Animals & 1000 Words 🦁',
+        levelBadge: 'English Master 👑',
+        reason: `رَصِيدُ نُجُومِكَ عَالٍ جِدّاً! حَانَ وَقْتُ تَوْسِيعِ حَصِيلَتِكَ اللُّغَوِيَّةِ بِأَسْمَاءِ الْحَيَوَانَاتِ وَالْبِيئَاتِ وَتَحَدِّي الْقَامُوسِ!`,
+        promptQuestion: 'What are the zoo animals and habitats in Connect 3?',
+        actionChallenge: 'Your Mission: Master 10 new words from the 1000-Word Dictionary today! 📚'
+      };
+    }
+  } else {
+    // Arabic
+    if (stars < 60 || completed.length === 0) {
+      return {
+        subject: 'arabic',
+        subjectArabic: 'اللُّغَةُ الْعَرَبِيَّةُ',
+        title: 'نَشِيدُ «صِحَّتُنَا سِرُّ سَعَادَتِنَا» وَاللَّامُ الشَّمْسِيَّةُ وَالْقَمَرِيَّةُ 📖',
+        levelBadge: 'فَارِسُ الْحُرُوفِ ⭐',
+        reason: `بِدَايَةٌ مِثَالِيَّةٌ لِتَحْسِينِ مَهَارَاتِ الْقِرَاءَةِ بِالتَّشْكِيلِ وَحِفْظِ نَشِيدِ النَّظَافَةِ وَالصِّحَّةِ الْمُقَرَّرِ!`,
+        promptQuestion: 'أُرِيدُ شَرْحَ نَشِيدِ صِحَّتُنَا سِرُّ سَعَادَتِنَا وَمَعَانِي الْمُفْرَدَاتِ',
+        actionChallenge: 'تَحَدِّيكَ الْقَادِمُ: اسْتِمَاعٌ لِلنَّشِيدِ صَوْتِيّاً وَتَحْدِيدُ كَلِمَاتِ اللَّامِ الشَّمْسِيَّةِ! 🎵'
+      };
+    } else if (stars < 130) {
+      return {
+        subject: 'arabic',
+        subjectArabic: 'اللُّغَةُ الْعَرَبِيَّةُ',
+        title: 'أَدَوَاتُ الاسْتِفْهَامِ وَأُسْلُوبَا النَّهْيِ وَالنَّفْيِ ❓',
+        levelBadge: 'أَمِيرُ الْبَيَانِ 🚀',
+        reason: `لَقَدْ أَجَدْتَ الْقِرَاءَةَ، وَالآنَ سَتَتَمَيَّزُ فِي قَوَاعِدِ النَّحْوِ وَالأَسَالِيبِ الَّتِي تَتَكَرَّرُ دَائِماً فِي الامْتِحَانَاتِ!`,
+        promptQuestion: 'كَيْفَ أُمَيِّزُ بَيْنَ أُسْلُوبِ النَّهْيِ (لَا تَفْعَلْ) وَأُسْلُوبِ النَّفْيِ؟',
+        actionChallenge: 'تَحَدِّيكَ الْقَادِمُ: تَكْوِينُ 3 جُمَلِ اسْتِفْهَامٍ بِـ (مَاذَا - أَيْنَ - لِمَاذَا)! ✍️'
+      };
+    } else {
+      return {
+        subject: 'arabic',
+        subjectArabic: 'اللُّغَةُ الْعَرَبِيَّةُ',
+        title: 'نَشِيدُ «أَصْحَابُ الْمِهَنِ» وَحُرُوفُ الْعَطْفِ وَالإِمْلَاءُ 📜',
+        levelBadge: 'عَبْقَرِيُّ الضَّادِ 👑',
+        reason: `مُسْتَوَاكَ الرَّفِيعُ يُؤَهِّلُكَ لِإِتْقَانِ الظَّوَاهِرِ اللُّغَوِيَّةِ الْمُتَقَدِّمَةِ مِثْلَ حُرُوفِ الْعَطْفِ (و، فـ، ثم، أو) وَالْفَرْقِ بَيْنَ التَّاءِ الْمَرْبُوطَةِ وَالْمَفْتُوحَةِ!`,
+        promptQuestion: 'اشْرَحْ لِي حُرُوفَ الْعَطْفِ وَمَعَانِيهَا بِأَمْثِلَةٍ سَهْلَةٍ',
+        actionChallenge: 'تَحَدِّيكَ الْقَادِمُ: قِرَاءَةُ نَصِّ قِصَّةِ أَدَوَاتِي الشَّخْصِيَّةِ كَامِلاً دُونَ أَيِّ تَرَدُّدٍ! 🌟'
+      };
+    }
+  }
+}
+
+// 1. Math Brain: Clock, Arithmetic, Fractions, Geometry, Perimeter & Area, Graphs & Measurements
 function solveMathQuery(rawQuery: string, studentName: string, isGirl: boolean): TutorResponse | null {
   const q = normText(rawQuery);
   const praise = isGirl ? `يَا بَطَلَتَنَا الذَّكِيَّةَ ${studentName} ⭐` : `يَا بَطَلَنَا الذَّكِيَّ ${studentName} ⭐`;
 
   // --- A. Clock & Time ---
-  if (q.includes('ساع') || q.includes('دقيق') || q.includes('عقرب') || q.includes('الوقت') || q.includes('كم دقيقه')) {
+  if (q.includes('ساع') || q.includes('دقيق') || q.includes('عقرب') || q.includes('الوقت') || q.includes('كم دقيقه') || q.includes('المنقضي')) {
+    if (q.includes('منقضي') || q.includes('الوقت المنقضي')) {
+      return {
+        handled: true,
+        category: 'math',
+        topic: 'حِسَابُ الْوَقْتِ الْمُنْقَضِي ⏱️',
+        reply: `مَسْأَلَةٌ هَامَّةٌ جِدّاً ${praise}! ⏱️
+**قَانُونُ الْوَقْتِ الْمُنْقَضِي**:
+• **الْوَقْتُ الْمُنْقَضِي = وَقْتُ النِّهَايَةِ - وَقْتُ الْبِدَايَةِ**.
+
+💡 مِثَالٌ تَوْضِيحِيٌّ سَهْلٌ:
+• بَدَأَ أَحْمَدُ الْمُذَاكَرَةَ السَّاعَةَ 4:15، وَانْتَهَى السَّاعَةَ 5:45.
+• الْوَقْتُ الْمُنْقَضِي = 5:45 - 4:15 = **سَاعَةٌ وَ 30 دَقِيقَةً** (سَاعَةٌ وَنِصْف)!
+• تَمْرِينٌ سَرِيعٌ: إِذَا بَدَأْتَ اللَّعِبَ 2:00 وَانْتَهَيْتَ 2:40، فَالْوَقْتُ الْمُنْقَضِي هُوَ **40 دَقِيقَةً**!`
+      };
+    }
+
     if (q.includes('كم دقيقه في الساع') || (q.includes('الساعه') && q.includes('كم دقيق'))) {
       return {
         handled: true,
@@ -101,8 +236,37 @@ function solveMathQuery(rawQuery: string, studentName: string, isGirl: boolean):
     };
   }
 
-  // --- B. Dynamic Multiplication & Division Evaluator ---
-  // Matches "6 في 7", "6 x 7", "6 × 7", "6 * 7", "كم 6 في 7", "حاصل ضرب 8 في 9"
+  // --- B. Division Evaluator (القسمة كعملية عكسية للضرب) ---
+  const divMatch = rawQuery.match(/(\d+)\s*(?:على|÷|\/|قسمة|قسمه)\s*(\d+)/i) ||
+                   rawQuery.match(/قسمة\s*(\d+)\s*على\s*(\d+)/);
+  if (divMatch) {
+    const num1 = parseInt(divMatch[1], 10);
+    const num2 = parseInt(divMatch[2], 10);
+    if (num2 === 0) {
+      return {
+        handled: true,
+        category: 'math',
+        topic: 'الْقِسْمَةُ عَلَى الصِّفْرِ',
+        reply: `انْتَبِهْ ${praise}! ⚠️ لا تَجُوزُ الْقِسْمَةُ عَلَى الصِّفْرِ (لَيْسَ لَهَا مَعْنًى فِي الرِّيَاضِيَّاتِ).`
+      };
+    }
+    const quotient = Math.floor(num1 / num2);
+    const remainder = num1 % num2;
+    return {
+      handled: true,
+      category: 'math',
+      topic: `قِسْمَةُ: ${num1} ÷ ${num2}`,
+      reply: `إِجَابَةٌ رِيَاضِيَّةٌ دَقِيقَةٌ ${praise}! ➗
+**${num1} ÷ ${num2} = ${quotient}** ${remainder > 0 ? `(وَالْبَاقِي ${remainder})` : 'بِدُونِ بَاقٍ'}!
+
+💡 كَيْفَ نَفْهَمُ الْقِسْمَةَ بِسُهُولَةٍ؟
+• الْقِسْمَةُ هِيَ **الْعَمَلِيَّةُ الْعَكْسِيَّةُ لِلضَّرْبِ**!
+• لِحِسَابِ ${num1} ÷ ${num2}، اسْأَلْ نَفْسَكَ: مَا الْعَدَدُ الَّذِي إِذَا ضَرَبْتَهُ فِي ${num2} كَانَ النَّاتِجُ ${num1}؟
+  -> ${num2} × **${quotient}** = ${num2 * quotient}!`
+    };
+  }
+
+  // --- C. Dynamic Multiplication Evaluator ---
   const multMatch = rawQuery.match(/(\d+)\s*(?:في|x|×|\*|ضرب|بكام|يساوي|بـ)\s*(\d+)/i) ||
                     rawQuery.match(/حاصل ضرب\s*(\d+)\s*في\s*(\d+)/);
   if (multMatch) {
@@ -147,7 +311,7 @@ ${lines.map(l => `• ${l}`).join('\n')}
     }
   }
 
-  // --- C. Perimeter & Area (المحيط والمساحة) ---
+  // --- D. Perimeter & Area (المحيط والمساحة) ---
   if (q.includes('محيط') || q.includes('مساح')) {
     if (q.includes('مربع')) {
       return {
@@ -189,8 +353,8 @@ ${lines.map(l => `• ${l}`).join('\n')}
     };
   }
 
-  // --- D. Fractions (الكسور) ---
-  if (q.includes('كسر') || q.includes('كسور') || q.includes('بسط') || q.includes('مقام')) {
+  // --- E. Fractions (الكسور) ---
+  if (q.includes('كسر') || q.includes('كسور') || q.includes('بسط') || q.includes('مقام') || q.includes('كسر الوحدة')) {
     return {
       handled: true,
       category: 'math',
@@ -201,9 +365,29 @@ ${lines.map(l => `• ${l}`).join('\n')}
 • **شَرْطَةُ الْكَسْرِ**: الْخَطُّ الَّذِي يَفْصِلُ بَيْنَهُمَا.
 • **الْمَقَامُ (فِي الأَسْفَلِ)**: يَدُلُّ عَلَى جَمِيعِ الأَجْزَاءِ الْمُتَسَاوِيَةِ كُلِّهَا.
 
-⭐ قَوَاعِدُ الْمُقَارَنَةِ:
+⭐ **كَسْرُ الْوَحْدَةِ**: هُوَ كَسْرٌ بَسْطُهُ دَائِماً 1 (مِثْلَ: 1/2، 1/3، 1/4، 1/5).
+⭐ **قَوَاعِدُ الْمُقَارَنَةِ**:
 1. إِذَا اتَّحَدَ الْمَقَامَانِ: الْبَسْطُ الأَكْبَرُ هُوَ الْكَسْرُ الأَكْبَرُ (3/5 > 2/5).
-2. إِذَا اتَّحَدَ الْبَسْطَانِ: الْمَقَامُ الأَصْغَرُ هُوَ الْكَسْرُ الأَكْبَرُ! لأَنَّ تَقْسِيمَ الْفَطِيرَةِ عَلَى 2 يَعْطِيكَ نِصْفاً كَبِيراً، أَمَّا تَقْسِيمُهَا عَلَى 4 يَعْطِيكَ رُبْعاً صَغِيراً (1/2 > 1/4)!`
+2. إِذَا اتَّحَدَ الْبَسْطَانِ: الْمَقَامُ الأَصْغَرُ هُوَ الْكَسْرُ الأَكْبَرُ! لأَنَّ نِصْفَ الْفَطِيرَةِ أَكْبَرُ مِنْ رُبْعِهَا (1/2 > 1/4)!`
+    };
+  }
+
+  // --- F. Measurements & Data Graphs (القياس والتمثيل البياني) ---
+  if (q.includes('سنتيمتر') || q.includes('متر') || q.includes('كيلوجرام') || q.includes('جرام') || q.includes('لتر') || q.includes('تمثيل بياني') || q.includes('مخطط النقاط')) {
+    return {
+      handled: true,
+      category: 'math',
+      topic: 'وَحَدَاتُ الْقِيَاسِ وَالتَّمْثِيلُ الْبَيَانِيُّ 📊',
+      reply: `مُمْتَازٌ ${praise}! إِلَيْكَ مُلَخَّصُ وَحَدَاتِ الْقِيَاسِ الْمُقَرَّرَةِ:
+📏 **وَحَدَاتُ الطُّولِ**:
+• 1 مِتْر (م) = 100 سَنْتِيمِتْر (سَم).
+• 1 سَنْتِيمِتْر (سَم) = 10 مِلِّيمِتْرَات (مَم).
+⚖️ **وَحَدَاتُ الْكُتْلَةِ (الْوَزْنِ)**:
+• 1 كِيلُوجْرَام (كجم) = 1000 جِرَام (جم).
+🥛 **وَحَدَاتُ السَّعَةِ (السَّوَائِلِ)**:
+• 1 لِتْر (ل) = 1000 مِلِّيلِتْر (ملل).
+📊 **التَّمْثِيلُ الْبَيَانِيُّ بِالنِّقَاطِ (الْمُخَطَّطُ)**:
+يَسْتَخْدِمُ عَلَامَةَ (X) لِتَمْثِيلِ التِّكْرَارَاتِ، مَعَ مِفْتَاحٍ يُوَضِّحُ قِيمَةَ كُلِّ (X)!`
     };
   }
 
@@ -215,8 +399,7 @@ function solveEnglishQuery(rawQuery: string, studentName: string, isGirl: boolea
   const q = normText(rawQuery);
   const praise = isGirl ? `يَا بَطَلَتَنَا ${studentName} ⭐` : `يَا بَطَلَنَا ${studentName} ⭐`;
 
-  // Check dictionary words (Arabic translation or English meaning)
-  // Check direct English word lookup (e.g., "معنى apple", "ترجمة cat", "school")
+  // Check direct English word lookup in dictionary (e.g., "معنى apple", "ترجمة cat", "school")
   const englishWordMatch = rawQuery.match(/([a-zA-Z]{2,25})/);
   if (englishWordMatch) {
     const wordKey = englishWordMatch[1].toLowerCase();
@@ -260,7 +443,7 @@ function solveEnglishQuery(rawQuery: string, studentName: string, isGirl: boolea
   }
 
   // Connect 3 Unit 1: Feelings
-  if (q.includes('feeling') || q.includes('مشاعر') || q.includes('how do you feel') || q.includes('اشعر')) {
+  if (q.includes('feeling') || q.includes('مشاعر') || q.includes('how do you feel') || q.includes('اشعر') || q.includes('happy')) {
     return {
       handled: true,
       category: 'english',
@@ -298,6 +481,67 @@ function solveEnglishQuery(rawQuery: string, studentName: string, isGirl: boolea
   - «I have a stomachache» = عِنْدِي أَلَمٌ فِي الْمَعِدَةِ 🤢
 • **النَّصِيحَةُ**:
   «Take your medicine and drink plenty of water» (تَنَاوَلْ دَوَاءَكَ وَاشْرَبْ مَاءً كَثِيراً)!`
+    };
+  }
+
+  // Connect 3 Unit 3: On the weekend (Hobbies & Sports)
+  if (q.includes('weekend') || q.includes('رياضة') || q.includes('sports') || q.includes('عطلة') || q.includes('هوايات')) {
+    return {
+      handled: true,
+      category: 'english',
+      topic: 'Connect 3 - Unit 3: On the weekend',
+      reply: `رَائِعٌ ${praise}! الْوَحْدَةُ الثَّالِثَةُ Connect 3 عَنِ الأَنْشِطَةِ وَالْهِوَايَاتِ: ⚽
+• **الأَنْشِطَةُ**:
+  - Play sports (يُمَارِسُ الرِّيَاضَةَ)
+  - Play football (يَلْعَبُ كُرَةَ الْقَدَمِ)
+  - Listen to music (يَسْتَمِعُ إِلَى الْمُوسِيقَى)
+  - Draw pictures (يَرْسُمُ صُوَراً)
+  - Collect magnets (يَجْمَعُ الْمَغْنَاطِيسَاتِ)
+• **الْمُضَارِعُ الْمُسْتَمِرُّ (Present Continuous)**:
+  - I am playing sports now (أَنَا أَلْعَبُ رِيَاضَةً الآنَ).
+  - She is drawing a cat (هِيَ تَرْسُمُ قِطَّةً).`
+    };
+  }
+
+  // Connect 3 Unit 4: I love my home (Rooms & Furniture)
+  if (q.includes('home') || q.includes('منزل') || q.includes('غرفة') || q.includes('kitchen') || q.includes('living room') || q.includes('اثاث')) {
+    return {
+      handled: true,
+      category: 'english',
+      topic: 'Connect 3 - Unit 4: I love my home',
+      reply: `مَرْحَبًا بِكَ فِي دَرْسِ الْمَنْزِلِ ${praise}! 🏠
+• **غُرَفُ الْمَنْزِلِ**:
+  - Living room = غُرْفَةُ الْمَعِيشَةِ
+  - Bedroom = غُرْفَةُ النَّوْمِ
+  - Kitchen = الْمَطْبَخُ
+  - Bathroom = الْحَمَّامُ
+  - Dining room = غُرْفَةُ الطَّعَامِ
+• **الأَثَاثُ (Furniture)**:
+  - Armchair = كُرْسِيٌّ ذُو ذِرَاعَيْنِ
+  - Bookcase = خِزَانَةُ كُتُبٍ
+  - Cupboard = دُولابٌ
+  - Television = تِلْفَازٌ`
+    };
+  }
+
+  // Connect 3 Unit 5: At the zoo (Animals & Habitats)
+  if (q.includes('zoo') || q.includes('حيوان') || q.includes('lion') || q.includes('elephant') || q.includes('giraffe') || q.includes('حديقة الحيوان')) {
+    return {
+      handled: true,
+      category: 'english',
+      topic: 'Connect 3 - Unit 5: At the zoo',
+      reply: `عَالَمُ الْحَيَوَانَاتِ فِي Connect 3 ${praise}! 🦁
+• **أَسْمَاءُ الْحَيَوَانَاتِ**:
+  - Lion = أَسَدٌ 🦁
+  - Elephant = فِيلٌ 🐘
+  - Giraffe = زَرَافَةٌ 🦒
+  - Hippo = فَرَسُ النَّهْرِ 🦛
+  - Panda = بَانْدَا 🐼
+  - Penguin = بِطْرِيقٌ 🐧
+• **الْبِيئَاتُ الطَّبِيعِيَّةُ (Habitats)**:
+  - Grasslands = الْمَرَاعِي الْخَضْرَاءُ (حَيْثُ يَعِيشُ الأَسَدُ وَالزَّرَافَةُ)
+  - Bamboo forest = غَابَاتُ الْخَيْزُرَانِ (مَوْطِنُ الْبَانْدَا)
+  - Rivers and lakes = الأَنْهَارُ وَالْبُحَيْرَاتُ (لِفَرَسِ النَّهْرِ)`
     };
   }
 
@@ -449,56 +693,99 @@ function solveArabicQuery(rawQuery: string, studentName: string, isGirl: boolean
     };
   }
 
-  // Taa Marbuta & Maftouha (التاء المربوطة والمفتوحة والهاء)
-  if (q.includes('مربوطه') || q.includes('مفتوحه') || q.includes('التاء') || q.includes('الهاء')) {
+  // Ta'a Marbouta vs Maftouha vs Haa (التاء المربوطة والمفتوحة والهاء)
+  if (q.includes('مربوطه') || q.includes('مفتوحه') || q.includes('هاء')) {
     return {
       handled: true,
       category: 'arabic',
-      topic: 'التَّاءُ الْمَرْبُوطَةُ وَالتَّاءُ الْمَفْتُوحَةُ وَالْهَاءُ',
-      reply: `طَرِيقَةٌ عَبْقَرِيَّةٌ لِلتَّفْرِيقِ بَيْنَهَا دُونَ خَطَأٍ ${praise}! ✍️
-1. **التَّاءُ الْمَفْتُوحَةُ (ت)**:
-   - تُنْطَقُ (تَاءً) عِنْدَ الْوَصْلِ وَعِنْدَ الْوَقْفِ بِالسُّكُونِ!
-   - *مِثَالٌ*: «بَيْتْ» (تَاء) ... «بَيْتُ الْجَدِّ» (تَاء).
-2. **التَّاءُ الْمَرْبُوطَةُ (ـة / ة)**:
-   - عِنْدَ الْوَقْفِ بِالسُّكُونِ تُنْطَقُ (هَاءً)، وَعِنْدَ الْوَصْلِ وَالْحَرَكَةِ تُنْطَقُ (تَاءً)!
-   - *مِثَالٌ*: «مَدْرَسَهْ» (هاء) ... «مَدْرَسَةُ التَّفَوُّقِ» (تاء).
-3. **الْهَاءُ الْمَرْبُوطَةُ (ـه / ه)**:
-   - تُنْطَقُ (هَاءً) عِنْدَ الْوَقْفِ وَعِنْدَ الْوَصْلِ دَائِماً!
-   - *مِثَالٌ*: «مِيَاهْ» (هاء) ... «مِيَاهُ النِّيلِ» (هاء).`
+      topic: 'الْفَرْقُ بَيْنَ التَّاءِ الْمَرْبُوطَةِ وَالْمَفْتُوحَةِ وَالْهَاءِ ✏️',
+      reply: `قَاعِدَةٌ إِمْلائِيَّةٌ ذَهَبِيَّةٌ ${praise}! ✏️
+💡 السِّرُّ هُوَ **السُّكُونُ وَالْحَرَكَةُ**:
+1. **التَّاءُ الْمَرْبُوطَةُ (ـة / ة)**:
+   - عِنْدَ السُّكُونِ تُنْطَقُ (هَاء): «مَدْرَسَهْ».
+   - عِنْدَ الْحَرَكَةِ تُنْطَقُ (تَاء): «مَدْرَسَةُ الْمُتَفَوِّقِينَ».
+2. **التَّاءُ الْمَفْتُوحَةُ (ت)**:
+   - تُنْطَقُ (تَاءً) فِي كِلْتَا الْحَالَتَيْنِ: «بِنْتْ» / «بِنْتُ كَرِيمَةٌ».
+3. **الْهَاءُ (ـه / ه)**:
+   - تُنْطَقُ (هَاءً) فِي كِلْتَا الْحَالَتَيْنِ: «مِيَاهْ» / «مِيَاهُ النَّهْرِ».`
+    };
+  }
+
+  // Types of Words (أقسام الكلام)
+  if (q.includes('اقسام الكلام') || q.includes('اسم وفعل') || q.includes('انواع الفعل')) {
+    return {
+      handled: true,
+      category: 'arabic',
+      topic: 'أَقْسَامُ الْكَلَامِ (اسْم - فِعْل - حَرْف)',
+      reply: `أَسَاسُ اللُّغَةِ الْعَرَبِيَّةِ ${praise}! 📝
+تَنْقَسِمُ الْكَلِمَةُ إِلَى ثَلَاثَةِ أَنْوَاعٍ:
+1. **الاسْمُ**: مَا دَلَّ عَلَى إِنْسَانٍ أَوْ حَيَوَانٍ أَوْ نَبَاتٍ أَوْ جَمَادٍ أَوْ صِفَةٍ.
+   • عَلَامَاتُهُ: يَقْبَلُ (الْـ)، التَّنْوِينَ، أَوْ التَّاءَ الْمَرْبُوطَةَ.
+2. **الْفِعْلُ**: حَدَثٌ مُرْتَبِطٌ بِزَمَنٍ، وَأَنْوَاعُهُ:
+   • **مَاضٍ**: كَتَبَ، قَرَأَ، لَعِبَ (حَدَثَ وَانْتَهَى).
+   • **مُضَارِعٌ**: يَكْتُبُ، تَقْرَأُ، نَلْعَبُ (مَا زَالَ يَحْدُثُ).
+   • **أَمْرٌ**: اكْتُبْ، اقْرَأْ، نَظِّفْ (طَلَبٌ).
+3. **الْحَرْفُ**: لَا يَظْهَرُ مَعْنَاهُ كَامِلاً إِلَّا مَعَ غَيْرِهِ (مِثْلَ: حُرُوفِ الْجَرِّ وَالْعَطْفِ).`
     };
   }
 
   return null;
 }
 
-// Master Omniscient Query Router
+// Master Router for Primary 3 Tutor Brain
 export function solvePrimary3Query(
   rawQuery: string,
   studentName: string = 'بَطَلَنَا',
   isGirl: boolean = false
 ): TutorResponse {
+  const norm = normText(rawQuery);
+  const praise = isGirl ? `يَا بَطَلَتَنَا الذَّكِيَّةَ ${studentName}` : `يَا بَطَلَنَا الذَّكِيَّ ${studentName}`;
+
+  // 0. Developer Tribute (Respectful, clean, no charity labels)
+  if (norm.includes('شريف') || norm.includes('مطور') || norm.includes('صاحب البرنامج') || norm.includes('مين عمل') || norm.includes('عسقلاني') || norm.includes('المعلم المشرف')) {
+    return {
+      handled: true,
+      category: 'general',
+      topic: 'إِشْرَافٌ وَتَطْوِيرٌ: أ/ شَرِيف عَسْقَلَانِي',
+      reply: `تَحِيَّةُ تَقْدِيرٍ ${praise}! 🌟
+مُطَوِّرُ «مَنَصَّةِ الطَّالِبِ الْمُجْتَهِدِ» هُوَ **الأُسْتَاذُ شَرِيف عَسْقَلَانِي**.
+• مُعَلِّمٌ خَبِيرٌ وَمُطَوِّرٌ تَعْلِيمِيٌّ؛ صَمَّمَ هَذِهِ الْمَنَصَّةَ لِجَعْلِ التَّعْلِيمِ مُمْتِعاً وَتَفَاعُلِيّاً لِأَبْطَالِ الصَّفِّ الثَّالِثِ الِابْتِدَائِيِّ.
+• تَشْمَلُ الْمَنَصَّةُ 3 مَوَادَّ شَامِلَةٍ (الرِّيَاضِيَّاتِ، الإِنْجِلِيزِيِّ Connect 3، وَاللُّغَةِ الْعَرَبِيَّةِ).
+📱 لِلتَّوَاصُلِ عَبْرَ الْوَاتْسَاب: **01080997505**.`
+    };
+  }
+
+  // Next lesson recommendation trigger via natural language
+  if (norm.includes('الدرس القادم') || norm.includes('اقترح') || norm.includes('اذاكر ايه') || norm.includes('ماذا اذاكر') || norm.includes('اقتراح')) {
+    return {
+      handled: true,
+      category: 'general',
+      topic: 'اقْتِرَاحُ الدَّرْسِ الْقَادِمِ 🚀',
+      reply: `اخْتِيَارٌ رَائِعٌ ${praise}! 🌟
+لِعَرْضِ الدَّرْسِ الأَنْسَبِ لَكَ الآنَ، اضْغَطْ عَلَى زِرِّ **«🚀 اقْتِرَاحُ الدَّرْسِ الْقَادِمِ»** الْمَوْجُودِ فِي شَرِيطِ التَّبْوِيبَاتِ بِالأَسْفَلِ، وَسَأَقُومُ بِمُطَابَقَةِ رَصِيدِ نُجُومِكَ وَمُسْتَوَاكَ لِتَحْدِيدِ التَّحَدِّي الأَمْثَلِ لَكَ خُطْوَةً بِخُطْوَةٍ!`
+    };
+  }
+
   // 1. Check Math Brain
   const mathRes = solveMathQuery(rawQuery, studentName, isGirl);
   if (mathRes) return mathRes;
 
-  // 2. Check English Connect 3 & Dictionary Brain
+  // 2. Check English Connect 3 Brain
   const engRes = solveEnglishQuery(rawQuery, studentName, isGirl);
   if (engRes) return engRes;
 
-  // 3. Check Arabic Curriculum & Grammar Brain
+  // 3. Check Arabic Brain
   const arRes = solveArabicQuery(rawQuery, studentName, isGirl);
   if (arRes) return arRes;
 
   // 4. Fallback intelligent response: encouraging student with helpful prompts
-  const praise = isGirl ? `يَا بَطَلَتَنَا الذَّكِيَّةَ ${studentName}` : `يَا بَطَلَنَا الذَّكِيَّ ${studentName}`;
   return {
     handled: false,
     reply: `أَهْلاً بِكَ ${praise}! 🌟
-أَنَا رُوبُوتُكَ الْمُعَلِّمُ الذَّكِيُّ لِمَنْهَجِ الصَّفِّ الثَّالِثِ الابْتِدَائِيِّ كَامِلاً:
-🧮 **فِي الرِّيَاضِيَّاتِ**: اكْتُبْ لِي أَيَّ مَسْأَلَةٍ (مِثْلَ: «6 في 7»، «جدول 8»، «الساعة 5 والربع يعني كام دقيقة»، «محيط المربع ومساحته»).
-🔤 **فِي الإِنْجِلِيزِيِّ Connect 3**: اكْتُبْ لِي أَيَّ كَلِمَةٍ لِتَرْجَمَتِهَا أَوْ سُؤَالٍ (مِثْلَ: «معنى كلمه صداع»، «ترجمة happy»، «How do you feel»).
-📖 **فِي اللُّغَةِ الْعَرَبِيَّةِ**: اسْأَلْنِي عَنِ الأَنَاشِيدِ (مِثْلَ: «أصحاب المهن»، «أخلاقنا»، «أسرار النجاح») أَوْ الْقَوَاعِدِ (مِثْلَ: «أدوات الاستفهام»، «الفرق بين لا الناهية والنافية»، «اللام الشمسية والقمرية»).
-
-اكْتُبْ سُؤَالَكَ الآنَ وَسَأُجِيبُكَ فَوْراً! 🤖🚀`
+أَنَا رُوبُوتُكَ الْمُعَلِّمُ الذَّكِيُّ لِمَوَادِّ الصَّفِّ الثَّالِثِ الابْتِدَائِيِّ كُلِّهَا:
+• 🧮 **الرِّيَاضِيَّاتُ**: اسْأَلْنِي عَنِ السَّاعَةِ، جَدَاوِلِ الضَّرْبِ (مِثْلَ: 6 في 7)، الْقِسْمَةِ، الْكُسُورِ، أَوْ الْمُحِيطِ وَالْمِسَاحَةِ!
+• 🔤 **اللُّغَةُ الإِنْجِلِيزِيَّةُ**: اسْأَلْنِي عَنْ أَيِّ كَلِمَةٍ بِالإِنْجِلِيزِيِّ (مِثْلَ: happy, lion, headache, leaf)، أَوْ مَعَانِي الْكَلِمَاتِ وَالْفُونِكْس!
+• 📖 **اللُّغَةُ الْعَرَبِيَّةُ**: اسْأَلْنِي عَنْ أَدَوَاتِ الاسْتِفْهَامِ، حُرُوفِ الْعَطْفِ، أُسْلُوبِ النَّهْيِ، أَوْ نَشِيدِ «صِحَّتُنَا سِرُّ سَعَادَتِنَا»!
+• 🚀 **اقْتِرَاحُ الدَّرْسِ الْقَادِمِ**: اضْغَطْ عَلَى زِرِّ اقْتِرَاحِ الدَّرْسِ لِمَعْرِفَةِ خُطْوَتِكَ الْمُقْبِلَةِ! 🤖`
   };
 }

@@ -164,20 +164,24 @@ async function startServer() {
   // In-memory TTS audio cache for instant playback
   const ttsCache = new Map<string, Buffer>();
 
-  // Ultra-reliable High-Quality Arabic TTS Endpoint (MP3 audio stream with parallel fetch & cache)
+  // Ultra-reliable High-Quality Arabic & English TTS Endpoint (MP3 audio stream with parallel fetch & cache)
   const handleTTS = async (req: express.Request, res: express.Response) => {
     try {
       const rawText = (req.method === "POST" ? req.body?.text : req.query?.text) as string;
+      const langParam = ((req.method === "POST" ? req.body?.lang : req.query?.lang) || req.query?.tl || "ar") as string;
+      const targetLang = langParam.toLowerCase().startsWith("en") ? "en" : "ar";
+
       if (!rawText || typeof rawText !== "string" || !rawText.trim()) {
         return res.status(400).json({ error: "Text parameter is required" });
       }
 
       // Limit overall text to reasonable lesson summary length
       const textToSpeak = rawText.slice(0, 1500).trim();
+      const cacheKey = `${targetLang}:${textToSpeak}`;
       
       // Check cache first
-      if (ttsCache.has(textToSpeak)) {
-        const cached = ttsCache.get(textToSpeak)!;
+      if (ttsCache.has(cacheKey)) {
+        const cached = ttsCache.get(cacheKey)!;
         res.setHeader("Content-Type", "audio/mpeg");
         res.setHeader("Content-Length", cached.length.toString());
         res.setHeader("Cache-Control", "public, max-age=86400");
@@ -192,7 +196,7 @@ async function startServer() {
         const trimmed = chunk.trim();
         if (!trimmed) return null;
         try {
-          const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(trimmed)}&tl=ar&client=tw-ob`;
+          const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(trimmed)}&tl=${targetLang}&client=tw-ob`;
           const resp = await fetch(url, {
             headers: {
               "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -229,7 +233,7 @@ async function startServer() {
         const firstKey = ttsCache.keys().next().value;
         if (firstKey) ttsCache.delete(firstKey);
       }
-      ttsCache.set(textToSpeak, combinedBuffer);
+      ttsCache.set(cacheKey, combinedBuffer);
 
       res.setHeader("Content-Type", "audio/mpeg");
       res.setHeader("Content-Length", combinedBuffer.length.toString());

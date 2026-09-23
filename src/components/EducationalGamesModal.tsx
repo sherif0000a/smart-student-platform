@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Rocket, Trophy, Star, Volume2, Sparkles, X, CheckCircle2, ArrowRight, Award, Flame, RefreshCw, Zap, Heart, Brain } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Rocket, Trophy, Star, Volume2, Sparkles, X, CheckCircle2, ArrowRight, Award, Flame, RefreshCw, Zap, Heart, Brain, Search, Crosshair, Radio } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sounds, speakEnglish, speakArabic, stopSpeaking } from '../utils/audio';
 
@@ -10,7 +11,7 @@ interface EducationalGamesModalProps {
   studentName: string;
 }
 
-type GameType = 'mathRocket' | 'englishHunter' | 'arabicTreasure' | 'princessGarden' | 'candyKitchen' | 'speedChampion';
+type GameType = 'mathRocket' | 'englishHunter' | 'arabicTreasure' | 'princessGarden' | 'candyKitchen' | 'speedChampion' | 'galaxyBlaster' | 'mysteryDetective';
 
 interface GameQuestion {
   question: string;
@@ -84,6 +85,30 @@ const CANDY_KITCHEN_QUESTIONS: GameQuestion[] = [
   { question: '🍦 Ice cream flavours: What flavour is «vanilla»?', options: ['فَانِيلْيَا', 'شُوكُولَاتَة', 'فَرَاوْلَة'], correct: 'فَانِيلْيَا', hint: 'Vanilla flavour', audioText: 'vanilla', isEnglishAudio: true }
 ];
 
+// Creative Game 1: Galaxy Asteroid Blaster (Space Defender)
+const GALAXY_BLASTER_QUESTIONS: GameQuestion[] = [
+  { question: '🪐 لَيْزَرُ الْكُوَيْكِبَاتِ: احْسُبْ سَرِيعاً لِتَفْجِيرِ النَّيْزَكِ: 9 × 7 = ؟', options: ['63', '56', '72'], correct: '63', hint: '9 × 7 = 63' },
+  { question: '🚀 دَافِعُ الصَّارُوخِ الْفَضَائِيِّ: 72 ÷ 8 = ؟', options: ['9', '8', '7'], correct: '9', hint: '8 × 9 = 72' },
+  { question: '🛡️ دِرْعُ الْحِمَايَةِ: أَيُّ الْكُسُورِ يُكَافِئُ النِّصْفَ (1/2)؟', options: ['2/4', '1/3', '3/8'], correct: '2/4', hint: '2 نِصْفُ الأَرْبَعَةِ' },
+  { question: '🛸 مَسَارُ الرِّحْلَةِ: جَمْعُ كَلِمَةِ «كَوْكَبٌ» فِي الْفَضَاءِ:', options: ['كَوَاكِبُ', 'كَوْكَبَاتٌ', 'أَكْوَابٌ'], correct: 'كَوَاكِبُ', hint: 'جَمْعُ تَكْسِيرٍ لِكَوْكَبٍ' },
+  { question: '⭐ Space Station Phonics: Choose the letters for "st_ _" (نَجْمٌ):', options: ['ar', 'er', 'ir'], correct: 'ar', hint: 's - t - a - r', audioText: 'star', isEnglishAudio: true },
+  { question: '⚡ زَمَنُ الدَّوَرَانِ: 3 سَاعَاتٍ كَامِلَةٍ = كَمْ دَقِيقَةً؟', options: ['180 دَقِيقَةً', '120 دَقِيقَةً', '90 دَقِيقَةً'], correct: '180 دَقِيقَةً', hint: '3 × 60 = 180' },
+  { question: '☄️ تَفْكِيكُ الْكُوَيْكِبِ: 8 × 6 = (8 × 5) + (8 × ...؟)', options: ['1', '2', '3'], correct: '1', hint: '5 + 1 = 6' },
+  { question: '🌌 رَصْدُ الأَبْعَادِ: مُحِيطُ مُثَلَّثٍ مُتَسَاوِي الأَضْلاعِ طُولُ ضِلْعِهِ 6 سَم = ؟', options: ['18 سَم', '24 سَم', '12 سَم'], correct: '18 سَم', hint: '6 + 6 + 6 = 18' }
+];
+
+// Creative Game 2: Mystery Word Detective (Vault Solver)
+const MYSTERY_DETECTIVE_QUESTIONS: GameQuestion[] = [
+  { question: '🕵️‍♂️ لُغْزُ الْمُحَقِّقِ: أَنَا أَدَاةُ اسْتِفْهَامٍ أَسْأَلُ عَنِ السَّبَبِ وَالْعِلَّةِ، فَمَنْ أَنَا؟', options: ['لِمَاذَا', 'كَيْفَ', 'مَتَى'], correct: 'لِمَاذَا', hint: 'تَسْأَلُ: لِمَاذَا نَتَعَلَّمُ؟' },
+  { question: '🔍 شَفْرَةُ الْمُرَادَفَاتِ: مُرَادِفُ كَلِمَةِ «مَبْهُورٌ» فِي دُرُوسِنَا:', options: ['مُنْدَهِشٌ وَمُتَعَجِّبٌ', 'غَاضِبٌ', 'خَائِفٌ'], correct: 'مُنْدَهِشٌ وَمُتَعَجِّبٌ', hint: 'يَشْعُرُ بِالإِعْجَابِ وَالدَّهْشَةِ' },
+  { question: '🔐 عَكْسُ السِّرِّ: مُضَادُّ كَلِمَةِ «الصَّالِحُ» فِي الْقِصَّةِ:', options: ['الْفَاسِدُ', 'الْكَبِيرُ', 'الضَّعِيفُ'], correct: 'الْفَاسِدُ', hint: 'عَكْسُ الصَّلاحِ' },
+  { question: '🐾 Mystery Animal Clue: I have black and white stripes and live in Africa:', options: ['zebra', 'lion', 'monkey'], correct: 'zebra', hint: 'Striped horse-like animal', audioText: 'zebra', isEnglishAudio: true },
+  { question: '🗝️ لُغْزُ الإِمْلاءِ: أَيُّ الْكَلِمَاتِ الآتِيَةِ مَبْدُوءَةٌ بِـ «هَمْزَةِ قَطْعٍ» ظَاهِرَةٍ؟', options: ['أَحْمَدُ', 'انْتَبَهَ', 'اسْتَمَعَ'], correct: 'أَحْمَدُ', hint: 'الْهَمْزَةُ مَكْتُوبَةٌ فَوْقَ الأَلِفِ (أ)' },
+  { question: '⏰ شَفْرَةُ السَّاعَةِ: إِذَا كَانَتِ السَّاعَةُ 3:45، فَإِنَّهَا تَعْنِي:', options: ['الرَّابِعَةُ إِلَّا رُبْعاً', 'الثَّالِثَةُ وَالرُّبْعُ', 'الرَّابِعَةُ وَالنِّصْفُ'], correct: 'الرَّابِعَةُ إِلَّا رُبْعاً', hint: 'بَقِيَ 15 دَقِيقَةً لِتَكُونَ 4:00' },
+  { question: '📜 لُغْزُ النَّصِيحَةِ: «... تُؤَجِّلْ عَمَلَ الْيَوْمِ إِلَى الْغَدِ»:', options: ['لَا (نَهْيٌ)', 'لَمْ (نَفْيٌ)', 'كَيْفَ'], correct: 'لَا (نَهْيٌ)', hint: 'أُسْلُوبُ نَهْيٍ عَنِ التَّأْجِيلِ' },
+  { question: '🍎 Detective Health Clue: What should you drink daily to keep bones strong?', options: ['milk', 'cola', 'tea'], correct: 'milk', hint: 'Rich in calcium', audioText: 'milk', isEnglishAudio: true }
+];
+
 export const EducationalGamesModal: React.FC<EducationalGamesModalProps> = ({
   isOpen,
   onClose,
@@ -107,6 +132,8 @@ export const EducationalGamesModal: React.FC<EducationalGamesModalProps> = ({
       case 'princessGarden': return PRINCESS_GARDEN_QUESTIONS;
       case 'candyKitchen': return CANDY_KITCHEN_QUESTIONS;
       case 'speedChampion': return SPEED_CHAMPION_QUESTIONS;
+      case 'galaxyBlaster': return GALAXY_BLASTER_QUESTIONS;
+      case 'mysteryDetective': return MYSTERY_DETECTIVE_QUESTIONS;
     }
   };
 
@@ -180,24 +207,50 @@ export const EducationalGamesModal: React.FC<EducationalGamesModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-xs animate-fadeIn">
-      <div className="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl border-4 border-amber-400 overflow-hidden flex flex-col max-h-[92vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-xs">
+      <motion.div
+        initial={{ scale: 0.88, opacity: 0, y: 30 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+        transition={{ type: 'spring', damping: 24, stiffness: 280 }}
+        className="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl border-4 border-amber-400 overflow-hidden flex flex-col max-h-[92vh]"
+      >
         {/* Arcade Top Banner */}
         <div className={`p-4 sm:p-5 text-white flex items-center justify-between transition-colors ${
           currentGame === 'princessGarden' 
             ? 'bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600'
+            : currentGame === 'galaxyBlaster'
+            ? 'bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950'
+            : currentGame === 'mysteryDetective'
+            ? 'bg-gradient-to-r from-amber-900 via-stone-900 to-amber-950'
             : 'bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-700'
         }`}>
           <div className="flex items-center gap-3">
             <span className="p-2.5 bg-white/20 rounded-2xl text-2xl shadow">
-              {currentGame === 'princessGarden' ? '🌸' : '🎮'}
+              {currentGame === 'princessGarden' 
+                ? '🌸' 
+                : currentGame === 'galaxyBlaster' 
+                ? '🪐' 
+                : currentGame === 'mysteryDetective' 
+                ? '🕵️‍♂️' 
+                : '🎮'}
             </span>
             <div>
               <h2 className="text-lg sm:text-xl font-black">
-                {currentGame === 'princessGarden' ? 'قَصْرُ الأَمِيرَاتِ وَحَدِيقَةُ الْوُرُودِ 🌸' : 'أَلْعَابُ التَّحَدِّي وَتَقْفِيلِ النُّجُومِ 🌟'}
+                {currentGame === 'princessGarden' 
+                  ? 'قَصْرُ الأَمِيرَاتِ وَحَدِيقَةُ الْوُرُودِ 🌸' 
+                  : currentGame === 'galaxyBlaster'
+                  ? 'صَائِدُ الْكُوَيْكِبَاتِ وَالْفَضَاءِ 🪐'
+                  : currentGame === 'mysteryDetective'
+                  ? 'مُحَقِّقُ الأَلْغَازِ وَخَزِينَةُ الأَسْرَارِ 🕵️‍♂️'
+                  : 'أَلْعَابُ التَّحَدِّي وَتَقْفِيلِ النُّجُومِ 🌟'}
               </h2>
               <p className="text-xs text-purple-100 font-bold">
-                الْعَبْ، تَحَدَّ نَفْسَكَ، وَاكْسِبْ نُجُوماً حَقِيقِيَّةً لِحِسَابِكَ!
+                {currentGame === 'galaxyBlaster'
+                  ? 'دَمِّرِ النَّيَازِكَ بِإِجَابَاتِكَ الذَّكِيَّةِ وَاحْمِ مَحَطَّةَ الْفَضَاءِ!'
+                  : currentGame === 'mysteryDetective'
+                  ? 'اكْتَشِفِ الأَدِلَّةَ، حُلَّ الأَلْغَازَ، وَافْتَحْ خَزِينَةَ الأَسْرَارِ الْمَغْلَقَةَ!'
+                  : 'الْعَبْ، تَحَدَّ نَفْسَكَ، وَاكْسِبْ نُجُوماً حَقِيقِيَّةً لِحِسَابِكَ!'}
               </p>
             </div>
           </div>
@@ -214,8 +267,34 @@ export const EducationalGamesModal: React.FC<EducationalGamesModalProps> = ({
           </button>
         </div>
 
-        {/* Game Mode Selector (Mobile Optimized 6 Games) */}
-        <div className="grid grid-cols-3 sm:grid-cols-6 bg-stone-100 p-1.5 border-b border-stone-200 text-xs font-black gap-1">
+        {/* Game Mode Selector (8 Games: Including 2 Brand New Creative Games) */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 bg-stone-100 p-1.5 border-b border-stone-200 text-xs font-black gap-1">
+          <button
+            onClick={() => {
+              setCurrentGame('galaxyBlaster');
+              handleRestartGame();
+            }}
+            className={`py-2 px-1 rounded-xl transition flex items-center justify-center gap-1 ${
+              currentGame === 'galaxyBlaster' ? 'bg-indigo-900 text-white shadow ring-2 ring-indigo-400' : 'text-stone-700 hover:bg-indigo-100/70 bg-indigo-50/60'
+            }`}
+          >
+            <Crosshair className="w-3.5 h-3.5 text-indigo-300" />
+            <span className="truncate">الْفَضَاءُ 🪐</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setCurrentGame('mysteryDetective');
+              handleRestartGame();
+            }}
+            className={`py-2 px-1 rounded-xl transition flex items-center justify-center gap-1 ${
+              currentGame === 'mysteryDetective' ? 'bg-amber-800 text-white shadow ring-2 ring-amber-400' : 'text-stone-700 hover:bg-amber-100/70 bg-amber-50/60'
+            }`}
+          >
+            <Search className="w-3.5 h-3.5 text-amber-200" />
+            <span className="truncate">الْمُحَقِّقُ 🕵️‍♂️</span>
+          </button>
+
           <button
             onClick={() => {
               setCurrentGame('princessGarden');
@@ -448,7 +527,7 @@ export const EducationalGamesModal: React.FC<EducationalGamesModalProps> = ({
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

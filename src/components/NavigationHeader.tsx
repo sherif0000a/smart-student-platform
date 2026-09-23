@@ -14,8 +14,11 @@ import {
   Gamepad2,
   Shield,
   Square,
-  LogOut
+  LogOut,
+  BarChart3,
+  FileCheck
 } from 'lucide-react';
+import { DeveloperBadge } from './DeveloperBadge';
 
 interface NavigationHeaderProps {
   profile: UserProfile;
@@ -27,6 +30,8 @@ interface NavigationHeaderProps {
   onOpenTeacherHub: () => void;
   onOpenSupervisorPanel?: () => void;
   onOpenEducationalGames?: () => void;
+  onOpenProgressDashboard?: () => void;
+  onOpenArabicQuizzes?: () => void;
   onSwitchAccount?: () => void;
   onToggleChat: () => void;
   isChatOpen: boolean;
@@ -49,6 +54,8 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
   onOpenTeacherHub,
   onOpenSupervisorPanel,
   onOpenEducationalGames,
+  onOpenProgressDashboard,
+  onOpenArabicQuizzes,
   onSwitchAccount,
   onToggleChat,
   isChatOpen,
@@ -92,7 +99,7 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 flex-wrap">
         
         {/* Logo & Platform Name: الطالب المجتهد */}
-        <div className="flex items-center gap-2 md:gap-3">
+        <div className="flex items-center gap-2 md:gap-3 flex-wrap">
           <button
             id="brand-home-btn"
             onClick={() => {
@@ -119,6 +126,11 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
               </p>
             </div>
           </button>
+
+          {/* Creative Developer Badge for Teacher Sherif */}
+          <div className="hidden lg:block">
+            <DeveloperBadge compact={false} />
+          </div>
         </div>
 
         {/* Action Controls & Badges */}
@@ -146,6 +158,38 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
             >
               <Gamepad2 className="w-3.5 h-3.5" />
               <span>أَلْعَابُ التَّحَدِّي 🎮</span>
+            </button>
+          )}
+
+          {/* Student Progress Dashboard (Recharts) */}
+          {onOpenProgressDashboard && (
+            <button
+              id="progress-dashboard-header-btn"
+              onClick={() => {
+                sounds.playClick();
+                onOpenProgressDashboard();
+              }}
+              className="flex items-center gap-1 bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-700 hover:to-sky-700 text-white font-black text-xs px-2.5 py-1.5 rounded-2xl shadow transition transform hover:scale-105 active:scale-95"
+              title="لوحة معلومات ورسوم بيانية لتقدم الطالب (Recharts)"
+            >
+              <BarChart3 className="w-3.5 h-3.5" />
+              <span>لَوْحَةُ تَقَدُّمِي 📊</span>
+            </button>
+          )}
+
+          {/* Arabic Unit Quizzes Shortcut */}
+          {onOpenArabicQuizzes && (
+            <button
+              id="arabic-quizzes-header-btn"
+              onClick={() => {
+                sounds.playClick();
+                onOpenArabicQuizzes();
+              }}
+              className="hidden sm:flex items-center gap-1 bg-amber-500 hover:bg-amber-600 text-white font-black text-xs px-2.5 py-1.5 rounded-2xl shadow transition transform hover:scale-105 active:scale-95"
+              title="اختبارات نهاية الوحدات في اللغة العربية مع تصحيح فوري وتغذية راجعة"
+            >
+              <span>📝</span>
+              <span>اخْتِبَارَاتُ الْوَحْدَاتِ</span>
             </button>
           )}
 
@@ -194,8 +238,8 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
             </button>
           )}
 
-          {/* Real-time Online Counter */}
-          {onOpenOnlineStudents && (
+          {/* Real-time Online Counter - Strictly visible only to Teacher and Supervisor, hidden from student */}
+          {(currentRole === 'teacher' || currentRole === 'supervisor') && onOpenOnlineStudents && (
             <button
               id="online-students-header-btn"
               onClick={() => {
@@ -203,7 +247,7 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
                 onOpenOnlineStudents();
               }}
               className="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 px-2.5 py-1.5 rounded-2xl text-xs font-bold transition-all shadow-xs"
-              title="الطلاب المتصلون أونلاين الآن"
+              title="الطلاب المتصلون أونلاين الآن (متاح للمعلم والمشرف)"
             >
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -213,6 +257,11 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
               <span>أَوْنْلَايْن: <strong className="text-emerald-900">{onlineCount}</strong></span>
             </button>
           )}
+
+          {/* Mobile Developer Badge shortcut */}
+          <div className="lg:hidden">
+            <DeveloperBadge compact={true} />
+          </div>
 
           {/* Reward Game Button */}
           {onOpenRewardGame && (

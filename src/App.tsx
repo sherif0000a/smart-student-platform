@@ -42,6 +42,8 @@ import { MalekDedicationModal } from './components/MalekDedicationModal';
 import { TeacherClassroomHubModal } from './components/TeacherClassroomHubModal';
 import { AnnouncementDetailsModal } from './components/AnnouncementDetailsModal';
 import { SendCertificateWhatsAppModal } from './components/SendCertificateWhatsAppModal';
+import { StudentProgressDashboardModal } from './components/StudentProgressDashboardModal';
+import { ArabicUnitQuizModal } from './components/ArabicUnitQuizModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { sendPresencePing } from './utils/presenceManager';
 import { sounds, stopSpeaking } from './utils/audio';
@@ -75,6 +77,9 @@ export default function App() {
   const [isOnlineStudentsOpen, setIsOnlineStudentsOpen] = useState(false);
   const [isAnnouncementDetailsOpen, setIsAnnouncementDetailsOpen] = useState(false);
   const [isSendWhatsAppCertOpen, setIsSendWhatsAppCertOpen] = useState(false);
+  const [isProgressDashboardOpen, setIsProgressDashboardOpen] = useState(false);
+  const [isArabicQuizOpen, setIsArabicQuizOpen] = useState(false);
+  const [activeQuizUnitId, setActiveQuizUnitId] = useState<number>(1);
   const [newlyUnlockedBadge, setNewlyUnlockedBadge] = useState<Badge | null>(null);
 
   // Subject Navigation
@@ -132,22 +137,23 @@ export default function App() {
     }
   }, []);
 
-  // Presence Heartbeat Loop (Multi-device, Server, & Cross-tab sync)
+  // Presence Heartbeat Loop (Multi-device, Server, & Cross-tab sync) - Optimized for mobile performance
+  const activityRef = useRef('');
+  useEffect(() => {
+    if (activeSubject === 'math') {
+      activityRef.current = selectedMathChapter ? `رياضيات: فصل ${selectedMathChapter.chapterNumber}` : 'منهج الرياضيات (10 فصول)';
+    } else if (activeSubject === 'english') {
+      activityRef.current = selectedEnglishUnit ? `English: Unit ${selectedEnglishUnit.unitNumber}` : 'English Connect 3';
+    } else {
+      activityRef.current = selectedArabicLesson ? `لغة عربية: ${selectedArabicLesson.title}` : 'خريطة اللغة العربية';
+    }
+  }, [activeSubject, selectedMathChapter, selectedEnglishUnit, selectedArabicLesson]);
+
   useEffect(() => {
     const studentName = profile?.name || 'مَالِك';
     const isGirl = profile?.heroType === 'girl';
     const avatar = profile?.avatar || (isGirl ? '👧' : '👦');
     const stars = profile?.totalStars || 15;
-
-    const getCurrentActivity = () => {
-      if (activeSubject === 'math') {
-        return selectedMathChapter ? `رياضيات: فصل ${selectedMathChapter.chapterNumber}` : 'منهج الرياضيات (10 فصول)';
-      } else if (activeSubject === 'english') {
-        return selectedEnglishUnit ? `English: Unit ${selectedEnglishUnit.unitNumber}` : 'English Connect 3';
-      } else {
-        return selectedArabicLesson ? `لغة عربية: ${selectedArabicLesson.title}` : 'خريطة اللغة العربية';
-      }
-    };
 
     const sendHeartbeat = async () => {
       try {
@@ -158,7 +164,7 @@ export default function App() {
           avatar,
           stars,
           subject: activeSubject === 'math' ? 'الرِّيَاضِيَّاتُ' : activeSubject === 'english' ? 'اللُّغَةُ الإِنْجِلِيزِيَّةُ' : 'اللُّغَةُ الْعَرَبِيَّةُ',
-          currentActivity: getCurrentActivity()
+          currentActivity: activityRef.current
         });
         if (liveList && liveList.length > 0) {
           setOnlineCount(liveList.length);
@@ -169,9 +175,9 @@ export default function App() {
     };
 
     sendHeartbeat();
-    const interval = setInterval(sendHeartbeat, 8000);
+    const interval = setInterval(sendHeartbeat, 15000);
     return () => clearInterval(interval);
-  }, [profile?.name, profile?.avatar, profile?.heroType, profile?.totalStars, activeSubject, selectedMathChapter, selectedEnglishUnit, selectedArabicLesson]);
+  }, [profile?.name, profile?.avatar, profile?.heroType, profile?.totalStars, activeSubject]);
 
   // Login handler
   const handleLoginSuccess = (role: UserRole, account: UserProfile | TeacherAccount | { name: string; role: 'supervisor' }) => {
@@ -289,6 +295,11 @@ export default function App() {
           }}
           onOpenSupervisorPanel={() => setIsSupervisorPanelOpen(true)}
           onOpenEducationalGames={() => setIsEducationalGamesOpen(true)}
+          onOpenProgressDashboard={() => setIsProgressDashboardOpen(true)}
+          onOpenArabicQuizzes={() => {
+            setActiveQuizUnitId(selectedArabicUnitId || 1);
+            setIsArabicQuizOpen(true);
+          }}
           onSwitchAccount={handleSwitchAccount}
           onToggleChat={() => setIsChatOpen(!isChatOpen)}
           isChatOpen={isChatOpen}
@@ -341,6 +352,7 @@ export default function App() {
         onOpenRewardGame={() => setIsRewardGameOpen(true)}
         onOpenOnlineStudents={() => setIsOnlineStudentsOpen(true)}
         onlineCount={onlineCount}
+        showOnlineCount={currentRole === 'teacher' || currentRole === 'supervisor'}
       />
 
       {/* Main Content Area */}
@@ -463,6 +475,10 @@ export default function App() {
                   stopSpeaking();
                   sounds.playButtonTap();
                   setSelectedArabicLesson(lesson);
+                }}
+                onOpenQuiz={(unitId) => {
+                  setActiveQuizUnitId(unitId);
+                  setIsArabicQuizOpen(true);
                 }}
               />
             </div>
@@ -653,6 +669,28 @@ export default function App() {
         onClose={() => setIsSendWhatsAppCertOpen(false)}
         students={getStudentsList()}
         teacherName={currentTeacher?.name || 'الأُسْتَاذُ شَرِيف عَسْقَلَانِي'}
+      />
+
+      {/* 18. Student Progress Dashboard Modal (Recharts) */}
+      <StudentProgressDashboardModal
+        isOpen={isProgressDashboardOpen}
+        onClose={() => setIsProgressDashboardOpen(false)}
+        profile={activeProfile}
+        onSelectSubject={handleSelectSubject}
+        onOpenArabicQuiz={(uId) => {
+          setActiveQuizUnitId(uId || 1);
+          setIsArabicQuizOpen(true);
+        }}
+        onOpenGames={() => setIsEducationalGamesOpen(true)}
+      />
+
+      {/* 19. Arabic End-of-Unit Quiz Modal */}
+      <ArabicUnitQuizModal
+        isOpen={isArabicQuizOpen}
+        onClose={() => setIsArabicQuizOpen(false)}
+        unitId={activeQuizUnitId}
+        studentName={activeProfile.name}
+        onAddStars={handleAddStars}
       />
 
       {/* Footer Attribution */}
