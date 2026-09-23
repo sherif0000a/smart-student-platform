@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Noto Naskh Arabic', 'Amiri', 'Cairo', system-ui, -apple-system, sans-serif;
+  }
+}
+
+.font-naskh {
+  font-family: 'Noto Naskh Arabic', 'Amiri', serif;
+}
+
+.font-amiri {
+  font-family: 'Amiri', 'Noto Naskh Arabic', serif;
+}
+
+.font-cairo {
+  font-family: 'Cairo', system-ui, sans-serif;
+}
+
+/* Primary school textbook Tashkeel styling (diacritics) */
+.textbook-tashkeel {
+  font-family: 'Noto Naskh Arabic', 'Amiri', serif;
+  line-height: 2.3;
+  letter-spacing: 0.02em;
+  font-feature-settings: "liga" 1, "dlig" 1;
+}
+
+.tashkeel-title {
+  font-family: 'Noto Naskh Arabic', 'Cairo', sans-serif;
+  line-height: 1.8;
+  letter-spacing: 0.01em;
+}
+
+/* Custom soft pulse and gentle float for kids interaction */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes calm-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.03); opacity: 0.94; }
+}
+
+@keyframes gentle-glow {
+  0%, 100% { box-shadow: 0 0 15px rgba(245, 158, 11, 0.2); }
+  50% { box-shadow: 0 0 25px rgba(245, 158, 11, 0.45); }
+}
+
+@keyframes sparkle-twinkle {
+  0%, 100% { opacity: 0.3; transform: scale(0.8) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.2) rotate(15deg); }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-calm-pulse {
+  animation: calm-pulse 3.5s ease-in-out infinite;
+}
+
+.animate-gentle-glow {
+  animation: gentle-glow 3s ease-in-out infinite;
+}
+
+.animate-sparkle {
+  animation: sparkle-twinkle 2.5s ease-in-out infinite;
+}
