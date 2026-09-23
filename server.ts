@@ -68,14 +68,14 @@ async function startServer() {
     }
   }, 10000);
 
-  // Endpoint for real-time presence heartbeat
-  app.post("/api/presence/heartbeat", (req, res) => {
+  // Endpoint for real-time presence heartbeat (supports both /api/presence and /api/presence/heartbeat)
+  const handlePresencePost = (req: any, res: any) => {
     try {
       const studentId = req.body?.id || req.body?.studentId;
       const studentName = req.body?.name;
       const isGirl = req.body?.isGirl === true || req.body?.heroType === "girl";
       const avatar = req.body?.avatar || (isGirl ? "👧" : "👦");
-      const subject = req.body?.subject || "رياضيات";
+      const subject = req.body?.subject || "الرِّيَاضِيَّاتُ";
       const currentActivity = req.body?.currentLesson || req.body?.currentActivity || "يحل تدريبات المنهج";
       const gradeLevel = req.body?.gradeLevel || "الصف الثالث الابتدائي";
       const stars = Number(req.body?.stars) || 0;
@@ -86,7 +86,7 @@ async function startServer() {
 
       activeStudentsMap.set(studentId, {
         id: studentId,
-        name: String(studentName).slice(0, 30),
+        name: String(studentName).slice(0, 35),
         heroType: isGirl ? "girl" : "boy",
         avatar,
         subject,
@@ -95,21 +95,33 @@ async function startServer() {
         lastSeen: Date.now()
       });
 
-      return res.json({ success: true, onlineCount: activeStudentsMap.size });
+      const list = Array.from(activeStudentsMap.values()).map(s => ({
+        ...s,
+        isSelf: false,
+        secondsAgo: Math.round((Date.now() - s.lastSeen) / 1000)
+      }));
+
+      return res.json({ success: true, onlineCount: activeStudentsMap.size, students: list });
     } catch (e: any) {
       return res.status(500).json({ error: e.message });
     }
-  });
+  };
 
-  // Endpoint to get active online students list
-  app.get("/api/presence/online", (_req, res) => {
+  app.post("/api/presence/heartbeat", handlePresencePost);
+  app.post("/api/presence", handlePresencePost);
+
+  // Endpoint to get active online students list (supports both /api/presence/online and /api/presence)
+  const handlePresenceGet = (_req: any, res: any) => {
     const list = Array.from(activeStudentsMap.values()).map(s => ({
       ...s,
       isSelf: false,
       secondsAgo: Math.round((Date.now() - s.lastSeen) / 1000)
     }));
     return res.json({ count: list.length, students: list });
-  });
+  };
+
+  app.get("/api/presence/online", handlePresenceGet);
+  app.get("/api/presence", handlePresenceGet);
 
   // Helper to split text into manageable sentences for TTS
   function splitArabicText(text: string, maxLen = 140): string[] {

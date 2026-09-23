@@ -10,7 +10,7 @@ interface EducationalGamesModalProps {
   studentName: string;
 }
 
-type GameType = 'mathRocket' | 'englishHunter' | 'arabicTreasure' | 'princessGarden' | 'speedChampion';
+type GameType = 'mathRocket' | 'englishHunter' | 'arabicTreasure' | 'princessGarden' | 'candyKitchen' | 'speedChampion';
 
 interface GameQuestion {
   question: string;
@@ -72,6 +72,18 @@ const SPEED_CHAMPION_QUESTIONS: GameQuestion[] = [
   { question: '⚡ مُحِيطُ مُثَلَّثٍ مُتَسَاوِي الأَضْلاعِ طُولُ ضِلْعِهِ 4 سَم = ؟', options: ['12 سَم', '16 سَم', '8 سَم'], correct: '12 سَم', hint: '4 + 4 + 4 = 12' }
 ];
 
+// Special Magic Candy Kitchen Game for girls and creative learners
+const CANDY_KITCHEN_QUESTIONS: GameQuestion[] = [
+  { question: '🧁 صِينِيَّةُ الْكَبْ كَيْك: خَبَزْتِ 3 صَوَانٍ، فِي كُلِّ صِينِيَّةٍ 4 كَعْكَاتٍ لَذِيذَةٍ. كَمْ كَعْكَةً فِي الْمَجْمُوعِ؟', options: ['12 كَعْكَةً', '7 كَعْكَاتٍ', '15 كَعْكَةً'], correct: '12 كَعْكَةً', hint: '3 × 4 = 12' },
+  { question: '🍓 لَذَّةُ Connect 3: كَيْفَ نَقُولُ «فَرَاوْلَة» بِالإِنْجِلِيزِيَّةِ؟', options: ['strawberry', 'apple', 'banana'], correct: 'strawberry', hint: 'Strawberry is a sweet red fruit', audioText: 'strawberry', isEnglishAudio: true },
+  { question: '🍰 كُسُورُ الْوَصْفَةِ: وَضَعْتِ 1/2 كُوبٍ مِنَ السُّكَّرِ، وَأُخْتُكِ وَضَعَتْ 1/4 كُوبٍ. أَيُّكُمَا وَضَعَتْ كَمِّيَّةً أَكْبَرَ؟', options: ['أَنْتِ (1/2 كُوبٍ)', 'أُخْتُكِ (1/4 كُوبٍ)', 'مُتَسَاوِيَانِ'], correct: 'أَنْتِ (1/2 كُوبٍ)', hint: 'النِّصْفُ (1/2) أَكْبَرُ مِنَ الرُّبْعِ (1/4)' },
+  { question: '🍪 كَلِمَةُ «بَسْكَوِيتٌ» هِيَ اسْمٌ ...', options: ['مُذَكَّرٌ', 'مُؤَنَّثٌ'], correct: 'مُذَكَّرٌ', hint: 'نَقُولُ: هَذَا بَسْكَوِيتٌ لَذِيذٌ' },
+  { question: '🍯 عَسَلٌ صَافٍ: كَيْفَ نَقُولُ «عَسَلٌ» بِاللُّغَةِ الإِنْجِلِيزِيَّةِ؟', options: ['honey', 'milk', 'water'], correct: 'honey', hint: 'Sweet bees make golden honey', audioText: 'honey', isEnglishAudio: true },
+  { question: '⏰ سَاعَةُ الْفُرْنِ: وُضِعَتِ الْكَعْكَةُ السَّاعَةَ 5:00 وَتَحْتَاجُ 20 دَقِيقَةً (ثُلُثَ سَاعَةٍ). مَتَى تُصْبِحُ جَاهِزَةً؟', options: ['5:20 (الْخَامِسَةُ وَالثُّلُثُ)', '5:15', '5:30'], correct: '5:20 (الْخَامِسَةُ وَالثُّلُثُ)', hint: '5:00 + 20 دَقِيقَةً' },
+  { question: '🍽️ أَدَبُ الطَّعَامِ: قَبْلَ أَنْ نَبْدَأَ بِتَنَاوُلِ الطَّعَامِ وَالْحَلْوَى، نَقُولُ:', options: ['بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ', 'شُكْراً لَكُمْ', 'إِلَى اللِّقَاءِ'], correct: 'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ', hint: 'سُنَّةُ نَبِيِّنَا الْكَرِيمِ قَبْلَ كُلِّ طَعَامٍ' },
+  { question: '🍦 Ice cream flavours: What flavour is «vanilla»?', options: ['فَانِيلْيَا', 'شُوكُولَاتَة', 'فَرَاوْلَة'], correct: 'فَانِيلْيَا', hint: 'Vanilla flavour', audioText: 'vanilla', isEnglishAudio: true }
+];
+
 export const EducationalGamesModal: React.FC<EducationalGamesModalProps> = ({
   isOpen,
   onClose,
@@ -93,6 +105,7 @@ export const EducationalGamesModal: React.FC<EducationalGamesModalProps> = ({
       case 'englishHunter': return ENGLISH_QUESTIONS;
       case 'arabicTreasure': return ARABIC_QUESTIONS;
       case 'princessGarden': return PRINCESS_GARDEN_QUESTIONS;
+      case 'candyKitchen': return CANDY_KITCHEN_QUESTIONS;
       case 'speedChampion': return SPEED_CHAMPION_QUESTIONS;
     }
   };
@@ -201,19 +214,32 @@ export const EducationalGamesModal: React.FC<EducationalGamesModalProps> = ({
           </button>
         </div>
 
-        {/* Game Mode Selector (Mobile Optimized 5 Games) */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 bg-stone-100 p-1.5 border-b border-stone-200 text-xs font-black gap-1">
+        {/* Game Mode Selector (Mobile Optimized 6 Games) */}
+        <div className="grid grid-cols-3 sm:grid-cols-6 bg-stone-100 p-1.5 border-b border-stone-200 text-xs font-black gap-1">
           <button
             onClick={() => {
               setCurrentGame('princessGarden');
               handleRestartGame();
             }}
-            className={`py-2 px-1 rounded-xl transition flex items-center justify-center gap-1 col-span-2 sm:col-span-1 ${
-              currentGame === 'princessGarden' ? 'bg-pink-600 text-white shadow' : 'text-stone-700 hover:bg-pink-100/70 bg-pink-50/50'
+            className={`py-2 px-1 rounded-xl transition flex items-center justify-center gap-1 ${
+              currentGame === 'princessGarden' ? 'bg-pink-600 text-white shadow' : 'text-stone-700 hover:bg-pink-100/70 bg-pink-50/60'
             }`}
           >
             <Heart className="w-3.5 h-3.5 fill-current" />
-            <span className="truncate">حَدِيقَةُ الأَمِيرَاتِ 🌸</span>
+            <span className="truncate">الأَمِيرَاتُ 🌸</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setCurrentGame('candyKitchen');
+              handleRestartGame();
+            }}
+            className={`py-2 px-1 rounded-xl transition flex items-center justify-center gap-1 ${
+              currentGame === 'candyKitchen' ? 'bg-rose-500 text-white shadow' : 'text-stone-700 hover:bg-rose-100/70 bg-rose-50/60'
+            }`}
+          >
+            <span className="text-sm">🧁</span>
+            <span className="truncate">الْحَلْوَيَاتُ 🍓</span>
           </button>
 
           <button
@@ -260,12 +286,12 @@ export const EducationalGamesModal: React.FC<EducationalGamesModalProps> = ({
               setCurrentGame('speedChampion');
               handleRestartGame();
             }}
-            className={`py-2 px-1 rounded-xl transition flex items-center justify-center gap-1 col-span-2 sm:col-span-1 ${
+            className={`py-2 px-1 rounded-xl transition flex items-center justify-center gap-1 ${
               currentGame === 'speedChampion' ? 'bg-indigo-600 text-white shadow' : 'text-stone-700 hover:bg-stone-200'
             }`}
           >
             <Brain className="w-3.5 h-3.5" />
-            <span className="truncate">الذَّكَاءُ السَّرِيعُ ⚡</span>
+            <span className="truncate">الذَّكَاءُ ⚡</span>
           </button>
         </div>
 

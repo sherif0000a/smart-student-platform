@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { UserProfile, Lesson } from '../types';
 import { sounds, speakArabic, stopSpeaking } from '../utils/audio';
 import { findCurriculumMatch } from '../data/curriculumMaster';
+import { solvePrimary3Query } from '../utils/tutorBrain';
 import curriculumReferenceData from '../data/curriculumReference.json';
 import { InteractiveCurriculumReader } from './InteractiveCurriculumReader';
 import { 
@@ -498,11 +499,15 @@ export const RobotTutorChat: React.FC<RobotTutorChatProps> = ({
             fallbackReply += `\n\n💡 الْفَائِدَةُ وَالْقَاعِدَةُ:\n${legacyMatch.moralOrRule}`;
           }
         } else {
-          fallbackReply = `${praise}
+          // Check Comprehensive Omniscient Primary 3 Brain (Math calculations, Time, Connect 3 English, Arabic)
+          const brainRes = solvePrimary3Query(message, studentName, isGirl);
+          if (brainRes.handled) {
+            fallbackReply = brainRes.reply;
+          } else {
+            fallbackReply = `${praise}
 أَنَا هُنَا مَعَكَ دَائِماً لِمُسَاعَدَتِكَ فِي أَيِّ سُؤَالٍ! 🤖
-هَلْ تَقْصِدُ سُؤَالاً عَنْ دَرْسٍ مُعَيَّنٍ (مِثْلَ: قِصَّةِ «الْبَطَلِ الْخَفِيِّ»، أَوْ نَشِيدِ «أَصْحَابِ الْمِهَنِ»، أَوْ نَشِيدِ «أَخْلَاقُنَا»، أَوْ دَرْسِ «ازْرَعْ نَبْتَةً»)؟
-أَمْ تُرِيدُ شَرْحَ قَاعِدَةٍ مِثْلَ (أَدَوَاتِ الاسْتِفْهَامِ، أُسْلُوبِ النَّفْيِ بـ لَمْ وَلَنْ، حُرُوفِ الْجَرِّ وَالْعَطْفِ، أَوْ أَسْمَاءِ الإِشَارَةِ)؟
-اكْتُبْ لِي كَلِمَةً مِنْ دَرْسِكَ أَوْ رَقَمَ الصَّفْحَةِ، وَسَأَقُومُ بِشَرْحِهِ لَكَ شَرْحاً مُلَخَّصاً وَتَفْصِيلِيّاً مَعاً فَوْراً! ⭐`;
+${brainRes.reply}`;
+          }
         }
       }
 

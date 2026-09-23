@@ -43,6 +43,7 @@ import { TeacherClassroomHubModal } from './components/TeacherClassroomHubModal'
 import { AnnouncementDetailsModal } from './components/AnnouncementDetailsModal';
 import { SendCertificateWhatsAppModal } from './components/SendCertificateWhatsAppModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { sendPresencePing } from './utils/presenceManager';
 import { sounds, stopSpeaking } from './utils/audio';
 import { getActiveSession, clearActiveSession, getAnnouncements, getStudentsList } from './utils/authStorage';
 import { Megaphone, Volume2, Sparkles, BookOpen } from 'lucide-react';
@@ -131,7 +132,7 @@ export default function App() {
     }
   }, []);
 
-  // Presence Heartbeat Loop (Communicates with server.ts /api/presence)
+  // Presence Heartbeat Loop (Multi-device, Server, & Cross-tab sync)
   useEffect(() => {
     const studentName = profile?.name || 'مَالِك';
     const isGirl = profile?.heroType === 'girl';
@@ -150,32 +151,25 @@ export default function App() {
 
     const sendHeartbeat = async () => {
       try {
-        const res = await fetch('/api/presence', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            studentId: studentIdRef.current,
-            name: studentName,
-            isGirl,
-            avatar,
-            stars,
-            currentActivity: getCurrentActivity()
-          })
+        const liveList = await sendPresencePing({
+          studentId: studentIdRef.current,
+          name: studentName,
+          isGirl,
+          avatar,
+          stars,
+          subject: activeSubject === 'math' ? 'الرِّيَاضِيَّاتُ' : activeSubject === 'english' ? 'اللُّغَةُ الإِنْجِلِيزِيَّةُ' : 'اللُّغَةُ الْعَرَبِيَّةُ',
+          currentActivity: getCurrentActivity()
         });
-        if (res.ok) {
-          const data = await res.json();
-          if (data && typeof data.onlineCount === 'number') {
-            setOnlineCount(data.onlineCount);
-          }
+        if (liveList && liveList.length > 0) {
+          setOnlineCount(liveList.length);
         }
       } catch {
-        // Fallback offline simulator
-        setOnlineCount(prev => Math.max(3, prev));
+        setOnlineCount(prev => Math.max(1, prev));
       }
     };
 
     sendHeartbeat();
-    const interval = setInterval(sendHeartbeat, 15000);
+    const interval = setInterval(sendHeartbeat, 8000);
     return () => clearInterval(interval);
   }, [profile?.name, profile?.avatar, profile?.heroType, profile?.totalStars, activeSubject, selectedMathChapter, selectedEnglishUnit, selectedArabicLesson]);
 

@@ -21,27 +21,28 @@ export const MathHubView: React.FC<MathHubViewProps> = ({
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* Banner */}
-      <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 rounded-3xl p-6 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 border-2 border-amber-300">
-        <div className="space-y-1 text-center md:text-right">
+      <div className="relative overflow-hidden bg-gradient-to-r from-orange-500 via-amber-500 to-rose-500 rounded-3xl p-6 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 border-4 border-amber-200">
+        <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/20 rounded-full blur-2xl pointer-events-none"></div>
+        <div className="space-y-1.5 text-center md:text-right relative z-10">
           <div className="flex items-center gap-2 justify-center md:justify-start">
-            <span className="p-2 bg-white/20 rounded-2xl text-2xl">📐</span>
-            <span className="bg-white/20 text-white text-xs font-black px-3 py-1 rounded-full">
+            <span className="p-2 bg-white/25 backdrop-blur-md rounded-2xl text-2xl animate-float">📐</span>
+            <span className="bg-white/20 backdrop-blur-md text-white text-xs font-black px-3 py-1 rounded-full border border-white/30">
               كِتَابُ الرِّيَاضِيَّاتِ - الصَّفُّ الثَّالِثُ الابْتِدَائِيُّ
             </span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-black">
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight drop-shadow-xs">
             عَالَمُ الرِّيَاضِيَّاتِ وَتَحَدِّيَاتُ الأَذْكِيَاءِ
           </h1>
-          <p className="text-amber-100 text-sm max-w-xl">
+          <p className="text-orange-50 text-xs sm:text-sm max-w-xl font-bold">
             10 فُصُولٍ شَامِلَةٍ مِنْ كِتَابِ الْوَزَارَةِ مَعَ خُطُوَاتِ الْحَلِّ الذَّهَنِيِّ وَأَسْئِلَةِ الْعَبَاقِرَةِ وَلُعْبَةِ جَوَائِزِ النُّجُومِ! 🌟
           </p>
         </div>
 
         <button
           onClick={onOpenRewardGame}
-          className="bg-white hover:bg-amber-100 text-amber-950 font-black text-sm px-6 py-3.5 rounded-2xl shadow-xl flex items-center gap-2 transition-transform hover:scale-105 active:scale-95 whitespace-nowrap"
+          className="relative z-10 bg-white hover:bg-yellow-50 text-slate-900 font-black text-sm px-6 py-3.5 rounded-2xl shadow-xl flex items-center gap-2 transition-transform hover:scale-105 active:scale-95 whitespace-nowrap border-2 border-yellow-300"
         >
-          <Trophy className="w-5 h-5 text-amber-600" />
+          <Trophy className="w-5 h-5 text-amber-500 animate-wiggle" />
           <span>لُعْبَةُ جَوَائِزِ الأَبْطَالِ 🎯</span>
         </button>
       </div>
@@ -55,7 +56,7 @@ export const MathHubView: React.FC<MathHubViewProps> = ({
               sounds.playClick();
               onSelectChapter(chapter);
             }}
-            className="group bg-white rounded-3xl p-5 border-2 border-slate-200 hover:border-amber-400 hover:shadow-xl transition-all cursor-pointer flex flex-col justify-between"
+            className="group bg-white rounded-3xl p-5 border-2 border-orange-100 hover:border-orange-400 hover:shadow-2xl hover:scale-[1.01] transition-all cursor-pointer flex flex-col justify-between"
           >
             <div className="space-y-3">
               <div className="flex items-start justify-between gap-2">

@@ -1,10 +1,19 @@
-// Synthesized kid-friendly sound effects using Web Audio API
+// Kid-Friendly Web Audio & Speech Synthesis Engine with Mobile Audio Unlock & Anti-Stall Guards
+
+// Global references to prevent browser garbage collection cutting off speech on Android/iOS
+declare global {
+  interface Window {
+    __activeUtterance?: SpeechSynthesisUtterance | null;
+    __speechKeepAliveTimer?: any;
+    __hasUnlockedMobileAudio?: boolean;
+  }
+}
 
 class SoundEffectsEngine {
   private ctx: AudioContext | null = null;
   public isMuted: boolean = false;
 
-  private getContext(): AudioContext | null {
+  public getContext(): AudioContext | null {
     if (typeof window === 'undefined') return null;
     if (!this.ctx) {
       const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -24,109 +33,112 @@ class SoundEffectsEngine {
     const ctx = this.getContext();
     if (!ctx) return;
 
-    const now = ctx.currentTime;
-    // Ascending celebratory notes: C5, E5, G5, B5, C6, E6
-    const freqs = [523.25, 659.25, 783.99, 987.77, 1046.50, 1318.51];
-    
-    freqs.forEach((freq, index) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
+    try {
+      const now = ctx.currentTime;
+      const freqs = [523.25, 659.25, 783.99, 987.77, 1046.50, 1318.51];
+      
+      freqs.forEach((freq, index) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
 
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, now + index * 0.07);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + index * 0.07);
 
-      gain.gain.setValueAtTime(0.16, now + index * 0.07);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + index * 0.07 + 0.38);
+        gain.gain.setValueAtTime(0.16, now + index * 0.07);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + index * 0.07 + 0.38);
 
-      osc.connect(gain);
-      gain.connect(ctx.destination);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
 
-      osc.start(now + index * 0.07);
-      osc.stop(now + index * 0.07 + 0.4);
-    });
+        osc.start(now + index * 0.07);
+        osc.stop(now + index * 0.07 + 0.4);
+      });
+    } catch {}
   }
 
-  // 2. Cheerful Encouragement Sound on Correct Answer (Rich Chime + Sparkling Shimmer)
+  // 2. Cheerful Encouragement Sound on Correct Answer
   public playCheerSuccess() {
     if (this.isMuted) return;
     const ctx = this.getContext();
     if (!ctx) return;
 
-    const now = ctx.currentTime;
-    
-    // First chord: F5 + A5
-    [698.46, 880.0].forEach((freq) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, now);
-      gain.gain.setValueAtTime(0.14, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.26);
-    });
+    try {
+      const now = ctx.currentTime;
+      
+      // First chord: F5 + A5
+      [698.46, 880.0].forEach((freq) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now);
+        gain.gain.setValueAtTime(0.14, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.26);
+      });
 
-    // Second chord: G5 + B5
-    [783.99, 987.77].forEach((freq) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, now + 0.12);
-      gain.gain.setValueAtTime(0.15, now + 0.12);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12 + 0.28);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now + 0.12);
-      osc.stop(now + 0.12 + 0.3);
-    });
+      // Second chord: G5 + B5
+      [783.99, 987.77].forEach((freq) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now + 0.12);
+        gain.gain.setValueAtTime(0.15, now + 0.12);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12 + 0.28);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + 0.12);
+        osc.stop(now + 0.12 + 0.3);
+      });
 
-    // Final triumphant chord: C6 + E6 + G6 with sparkling shimmer
-    [1046.50, 1318.51, 1567.98].forEach((freq, idx) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, now + 0.24);
-      gain.gain.setValueAtTime(0.18, now + 0.24);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24 + 0.6 + idx * 0.1);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now + 0.24);
-      osc.stop(now + 0.24 + 0.7);
-    });
+      // Final triumphant chord: C6 + E6 + G6
+      [1046.50, 1318.51, 1567.98].forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + 0.24);
+        gain.gain.setValueAtTime(0.18, now + 0.24);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24 + 0.6 + idx * 0.1);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + 0.24);
+        osc.stop(now + 0.24 + 0.7);
+      });
+    } catch {}
   }
 
-  // Alias for backward compatibility
   public playSuccess() {
     this.playCheerSuccess();
   }
 
-  // 3. Smooth Transition Between Paragraphs & Lesson Tabs (Gentle Melody Slide)
+  // 3. Smooth Transition Between Tabs & Lessons
   public playTransition() {
     if (this.isMuted) return;
     const ctx = this.getContext();
     if (!ctx) return;
 
-    const now = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
+    try {
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
 
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(587.33, now); // D5
-    osc.frequency.exponentialRampToValueAtTime(880.0, now + 0.12); // A5
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, now);
+      osc.frequency.exponentialRampToValueAtTime(880.0, now + 0.12);
 
-    gain.gain.setValueAtTime(0.1, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+      gain.gain.setValueAtTime(0.1, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
 
-    osc.connect(gain);
-    gain.connect(ctx.destination);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
 
-    osc.start(now);
-    osc.stop(now + 0.23);
+      osc.start(now);
+      osc.stop(now + 0.23);
+    } catch {}
   }
 
-  // Alias for tab switching
   public playTabSwitch() {
     this.playTransition();
   }
@@ -137,295 +149,340 @@ class SoundEffectsEngine {
     const ctx = this.getContext();
     if (!ctx) return;
 
-    const now = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
+    try {
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
 
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(520, now);
-    osc.frequency.exponentialRampToValueAtTime(320, now + 0.05);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(600, now);
+      osc.frequency.exponentialRampToValueAtTime(250, now + 0.06);
 
-    gain.gain.setValueAtTime(0.1, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
 
-    osc.connect(gain);
-    gain.connect(ctx.destination);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
 
-    osc.start(now);
-    osc.stop(now + 0.07);
+      osc.start(now);
+      osc.stop(now + 0.07);
+    } catch {}
   }
 
-  // Soft click alias
   public playClick() {
     this.playButtonTap();
   }
 
-  // 5. Gentle Hint / Think Tone
+  // 5. Gentle Hint & Learning Prompt Sound
   public playHint() {
     if (this.isMuted) return;
     const ctx = this.getContext();
     if (!ctx) return;
 
-    const now = ctx.currentTime;
-    const notes = [440, 554.37, 659.25]; // A4, C#5, E5
-    notes.forEach((freq, idx) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, now + idx * 0.05);
-
-      gain.gain.setValueAtTime(0.12, now + idx * 0.05);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.05 + 0.25);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start(now + idx * 0.05);
-      osc.stop(now + idx * 0.05 + 0.28);
-    });
-  }
-
-  // 6. Star Collected Twinkle
-  public playStar() {
-    if (this.isMuted) return;
-    const ctx = this.getContext();
-    if (!ctx) return;
-
-    const now = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(880, now);
-    osc.frequency.exponentialRampToValueAtTime(1760, now + 0.15);
-
-    gain.gain.setValueAtTime(0.2, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.start(now);
-    osc.stop(now + 0.35);
-  }
-
-  // 7. Grand Celebratory Fanfare for Lesson Completion
-  public playFanfare() {
-    if (this.isMuted) return;
-    const ctx = this.getContext();
-    if (!ctx) return;
-
-    const now = ctx.currentTime;
-    const fanfareNotes = [
-      { f: 523.25, t: 0, d: 0.15 },
-      { f: 659.25, t: 0.15, d: 0.15 },
-      { f: 783.99, t: 0.30, d: 0.18 },
-      { f: 1046.5, t: 0.48, d: 0.55 },
-      { f: 1318.5, t: 0.55, d: 0.55 }
-    ];
-
-    fanfareNotes.forEach((n) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(n.f, now + n.t);
-
-      gain.gain.setValueAtTime(0.18, now + n.t);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + n.t + n.d);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start(now + n.t);
-      osc.stop(now + n.t + n.d + 0.05);
-    });
+    try {
+      const now = ctx.currentTime;
+      [523.25, 659.25, 523.25].forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.09);
+        gain.gain.setValueAtTime(0.08, now + idx * 0.09);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.09 + 0.14);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + idx * 0.09);
+        osc.stop(now + idx * 0.09 + 0.15);
+      });
+    } catch {}
   }
 
   public playEncourage() {
     this.playHint();
   }
 
-  // Game Sounds for Points Reward Arcade
+  public playStar() {
+    this.playWelcomeLesson();
+  }
+
   public playBalloonPop() {
     if (this.isMuted) return;
     const ctx = this.getContext();
     if (!ctx) return;
-    const now = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(300, now);
-    osc.frequency.exponentialRampToValueAtTime(1400, now + 0.04);
-    osc.frequency.exponentialRampToValueAtTime(80, now + 0.12);
-    gain.gain.setValueAtTime(0.25, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(now);
-    osc.stop(now + 0.15);
+
+    try {
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(450, now);
+      osc.frequency.exponentialRampToValueAtTime(80, now + 0.08);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.09);
+    } catch {}
   }
 
   public playBonusScore() {
-    if (this.isMuted) return;
-    const ctx = this.getContext();
-    if (!ctx) return;
-    const now = ctx.currentTime;
-    [523.25, 659.25, 783.99, 1046.5].forEach((freq, idx) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, now + idx * 0.05);
-      gain.gain.setValueAtTime(0.18, now + idx * 0.05);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.05 + 0.22);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now + idx * 0.05);
-      osc.stop(now + idx * 0.05 + 0.25);
-    });
+    this.playCheerSuccess();
   }
 
   public playLevelUp() {
     this.playFanfare();
   }
+
+  // 6. Royal Fanfare for Certificates and Honors
+  public playFanfare() {
+    if (this.isMuted) return;
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    try {
+      const now = ctx.currentTime;
+      const notes = [
+        { f: 523.25, t: 0.0, d: 0.14 },
+        { f: 659.25, t: 0.15, d: 0.14 },
+        { f: 783.99, t: 0.30, d: 0.14 },
+        { f: 1046.50, t: 0.45, d: 0.45 }
+      ];
+
+      notes.forEach((n) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(n.f, now + n.t);
+        gain.gain.setValueAtTime(0.18, now + n.t);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + n.t + n.d);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + n.t);
+        osc.stop(now + n.t + n.d + 0.02);
+      });
+    } catch {}
+  }
 }
 
 export const sounds = new SoundEffectsEngine();
 
-// Encouragement Voice Helper saying: "أَحْسَنْتَ يَا [اسم الطفل]!"
-export function playPraiseVoice(
-  studentName?: string, 
-  isGirl?: boolean, 
-  customPhrase?: string
-) {
-  const name = studentName?.trim() || (isGirl ? 'بَطَلَتَنَا' : 'بَطَلَنَا');
-  const phrase = customPhrase || (
-    isGirl 
-      ? `أَحْسَنْتِ يَا بَطَلَتَنَا ${name}! إِجَابَةٌ صَحِيحَةٌ وَرَائِعَةٌ!` 
-      : `أَحْسَنْتَ يَا بَطَلَنَا ${name}! إِجَابَةٌ صَحِيحَةٌ وَرَائِعَةٌ!`
-  );
+// Mobile audio unlocker: resumes Web Audio Context and primes SpeechSynthesis on first tap
+export function unlockMobileAudio() {
+  if (typeof window === 'undefined') return;
+  if (window.__hasUnlockedMobileAudio) return;
 
-  speakArabic(phrase);
-}
-
-// Helper to split Arabic text into clean, manageable sentences for reading
-export function splitArabicSentences(text: string): string[] {
-  if (!text) return [];
-  // Remove markdown formatting
-  const clean = text
-    .replace(/[#*_`~[\]()]/g, '')
-    .replace(/\n+/g, ' ')
-    .trim();
-  
-  // Split on Arabic sentence terminators: . ! ؟ : \n
-  const parts = clean.split(/([.!؟:\n]+)/);
-  const sentences: string[] = [];
-  let current = '';
-
-  for (let i = 0; i < parts.length; i++) {
-    const part = parts[i];
-    if (part.match(/^[.!؟:\n]+$/)) {
-      current += part;
-      if (current.trim()) {
-        sentences.push(current.trim());
-        current = '';
+  try {
+    sounds.getContext();
+    if (window.speechSynthesis) {
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
       }
-    } else {
-      if (current.trim()) {
-        sentences.push(current.trim());
-      }
-      current = part;
+      // Speak a zero-volume blank token to initialize iOS and Android speech pipes
+      const dummy = new SpeechSynthesisUtterance('');
+      dummy.volume = 0;
+      window.speechSynthesis.speak(dummy);
     }
-  }
-  if (current.trim()) {
-    sentences.push(current.trim());
-  }
-
-  // Filter out any empty items
-  return sentences.filter(s => s.trim().length > 1);
+    window.__hasUnlockedMobileAudio = true;
+  } catch {}
 }
 
-// Active Audio Instance Tracker & Global Session Tokens
+// Auto-register touch & click unlockers
+if (typeof window !== 'undefined') {
+  window.addEventListener('touchstart', unlockMobileAudio, { once: true, passive: true });
+  window.addEventListener('click', unlockMobileAudio, { once: true });
+}
+
+// Track active audio sessions and elements
 let currentAudioElement: HTMLAudioElement | null = null;
 let currentAudioTimeout: any = null;
-let currentSessionCounter: number = 0;
-let isGloballyPlayingAudio: boolean = false;
-
-// Cache loaded speech synthesis voices
+let isGloballyPlayingAudio = false;
+let currentSessionCounter = 0;
 let cachedVoices: SpeechSynthesisVoice[] = [];
+
+// Preload voices
 if (typeof window !== 'undefined' && window.speechSynthesis) {
-  const updateVoices = () => {
-    try {
-      cachedVoices = window.speechSynthesis.getVoices() || [];
-    } catch {}
+  const loadVoices = () => {
+    cachedVoices = window.speechSynthesis.getVoices() || [];
   };
-  updateVoices();
+  loadVoices();
   if (window.speechSynthesis.onvoiceschanged !== undefined) {
-    window.speechSynthesis.onvoiceschanged = updateVoices;
+    window.speechSynthesis.onvoiceschanged = loadVoices;
   }
 }
 
-// Complete Immediate Audio Stop - Halts all audio streams, Web Speech, and pending tasks instantly
+// Clear any ongoing speech keep-alive timer
+function clearKeepAlive() {
+  if (typeof window !== 'undefined' && window.__speechKeepAliveTimer) {
+    clearInterval(window.__speechKeepAliveTimer);
+    window.__speechKeepAliveTimer = null;
+  }
+}
+
+// Global Stop Audio function
 export function stopSpeaking() {
   currentSessionCounter++;
   isGloballyPlayingAudio = false;
+  clearKeepAlive();
 
   if (currentAudioTimeout) {
     clearTimeout(currentAudioTimeout);
     currentAudioTimeout = null;
   }
 
-  // Stop backend audio stream if playing or loading
   if (currentAudioElement) {
     try {
       currentAudioElement.pause();
       currentAudioElement.currentTime = 0;
-      currentAudioElement.removeAttribute('src');
-      currentAudioElement.load();
-    } catch {
-      // Ignore
-    }
+      currentAudioElement.src = '';
+    } catch {}
     currentAudioElement = null;
   }
 
-  // Stop browser speech synthesis if active
   if (typeof window !== 'undefined' && window.speechSynthesis) {
     try {
       window.speechSynthesis.cancel();
-      window.speechSynthesis.pause();
-      window.speechSynthesis.cancel();
-    } catch {
-      // Ignore
-    }
-  }
-
-  // Notify any active UI listener to reset playing states
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('al-talib-audio-stopped'));
+      window.__activeUtterance = null;
+    } catch {}
   }
 }
 
-export const stopAllAudio = stopSpeaking;
-
-export function isAudioCurrentlyPlaying(): boolean {
+export function isAudioPlaying(): boolean {
   return isGloballyPlayingAudio;
 }
 
-// Speech Synthesis Helper using High-Definition Audio Stream with Web Speech Fallback
+// Speech Synthesis Keep-Alive to fix mobile Chrome 15s freeze & audio cut-off
+function startSpeechKeepAlive() {
+  clearKeepAlive();
+  if (typeof window === 'undefined' || !window.speechSynthesis) return;
+
+  window.__speechKeepAliveTimer = setInterval(() => {
+    try {
+      if (window.speechSynthesis && window.speechSynthesis.speaking) {
+        window.speechSynthesis.pause();
+        window.speechSynthesis.resume();
+      } else {
+        clearKeepAlive();
+      }
+    } catch {
+      clearKeepAlive();
+    }
+  }, 10000);
+}
+
+// Clean and prepare Arabic text for clear recitation
+function cleanArabicForSpeech(text: string): string {
+  if (!text) return '';
+  return text
+    .replace(/[#*_~`>[\]()]/g, ' ')
+    .replace(/http[s]?:\/\/\S+/g, '')
+    .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Browser Web Speech fallback with Android/iOS garbage collection and stall guards
+function runWebSpeech(
+  text: string,
+  lang: 'ar-SA' | 'en-US',
+  rate: number,
+  onStart?: () => void,
+  onEnd?: () => void,
+  sessionId?: number
+) {
+  if (typeof window === 'undefined' || !window.speechSynthesis) {
+    onEnd?.();
+    return;
+  }
+
+  try {
+    unlockMobileAudio();
+    window.speechSynthesis.cancel();
+    if (window.speechSynthesis.paused) {
+      window.speechSynthesis.resume();
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    // CRITICAL: save to window to prevent JavaScript Garbage Collection from cutting off audio mid-speech on mobile!
+    window.__activeUtterance = utterance;
+
+    utterance.lang = lang;
+    utterance.rate = rate;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+
+    const voices = cachedVoices.length > 0 ? cachedVoices : (window.speechSynthesis.getVoices() || []);
+    
+    if (lang === 'ar-SA') {
+      const arabicVoice = voices.find(
+        (v) =>
+          v.lang.startsWith('ar') ||
+          v.name.toLowerCase().includes('arabic') ||
+          v.name.toLowerCase().includes('tarik') ||
+          v.name.toLowerCase().includes('laila') ||
+          v.name.toLowerCase().includes('maged') ||
+          v.name.toLowerCase().includes('zeina') ||
+          v.name.toLowerCase().includes('shakir')
+      );
+      if (arabicVoice) {
+        utterance.voice = arabicVoice;
+      }
+    } else {
+      const enVoice = voices.find(
+        (v) =>
+          (v.lang.startsWith('en') || v.lang === 'en-US' || v.lang === 'en-GB') &&
+          (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha') || v.name.includes('Jenny') || v.name.includes('Victoria'))
+      ) || voices.find(v => v.lang.startsWith('en'));
+      if (enVoice) {
+        utterance.voice = enVoice;
+      }
+    }
+
+    utterance.onstart = () => {
+      if (sessionId !== undefined && sessionId !== currentSessionCounter) {
+        window.speechSynthesis.cancel();
+        return;
+      }
+      isGloballyPlayingAudio = true;
+      startSpeechKeepAlive();
+      onStart?.();
+    };
+
+    utterance.onend = () => {
+      clearKeepAlive();
+      window.__activeUtterance = null;
+      if (sessionId !== undefined && sessionId !== currentSessionCounter) return;
+      isGloballyPlayingAudio = false;
+      onEnd?.();
+    };
+
+    utterance.onerror = (e) => {
+      clearKeepAlive();
+      window.__activeUtterance = null;
+      if (sessionId !== undefined && sessionId !== currentSessionCounter) return;
+      isGloballyPlayingAudio = false;
+      onEnd?.();
+    };
+
+    window.speechSynthesis.speak(utterance);
+  } catch {
+    clearKeepAlive();
+    window.__activeUtterance = null;
+    isGloballyPlayingAudio = false;
+    onEnd?.();
+  }
+}
+
+// Speak Arabic text cleanly with dual engine: Server MP3 stream (if online) with instant Web Speech fallback
 export function speakArabic(
-  text: string, 
-  onEnd?: () => void, 
+  text: string,
+  onEnd?: () => void,
   onStart?: () => void,
   rate: number = 0.95
 ): { stop: () => void } {
-  // Always cancel any prior audio completely
   stopSpeaking();
+  unlockMobileAudio();
 
-  const cleanText = text
-    ? text.replace(/[\\/*#_`~[\]()\-+]/g, ' ').replace(/\s+/g, ' ').trim()
-    : '';
-
+  const cleanText = cleanArabicForSpeech(text);
   if (!cleanText) {
     onEnd?.();
     return { stop: () => stopSpeaking() };
@@ -458,21 +515,21 @@ export function speakArabic(
     }
   };
 
-  // 1. Try dedicated backend MP3 TTS endpoint first
+  // Attempt backend high-quality audio stream first with quick 750ms probe
   try {
-    const textSample = cleanText.slice(0, 550).trim();
+    const textSample = cleanText.slice(0, 450).trim();
     const audioUrl = `/api/tts?text=${encodeURIComponent(textSample)}`;
-    const audio = new Audio(audioUrl);
+    const audio = new Audio();
     currentAudioElement = audio;
     audio.playbackRate = Math.max(0.6, Math.min(1.8, rate));
 
-    // Watchdog timer: if backend audio hasn't started playing within 2s, fallback to Web Speech API
+    // Watchdog: If server audio doesn't start in 800ms (e.g. static hosting on Vercel), launch Web Speech API immediately!
     currentAudioTimeout = setTimeout(() => {
       if (activeSessionId !== currentSessionCounter) return;
       if (!hasStarted) {
-        fallbackWebSpeech(cleanText, safeEnd, safeStart, rate, activeSessionId);
+        runWebSpeech(cleanText, 'ar-SA', rate, safeStart, safeEnd, activeSessionId);
       }
-    }, 2000);
+    }, 800);
 
     audio.onplay = () => {
       if (activeSessionId !== currentSessionCounter) {
@@ -489,98 +546,69 @@ export function speakArabic(
 
     audio.onerror = () => {
       if (activeSessionId !== currentSessionCounter) return;
-      fallbackWebSpeech(cleanText, safeEnd, safeStart, rate, activeSessionId);
+      runWebSpeech(cleanText, 'ar-SA', rate, safeStart, safeEnd, activeSessionId);
     };
 
+    audio.src = audioUrl;
     const playPromise = audio.play();
     if (playPromise !== undefined) {
       playPromise.catch(() => {
-        // If aborted due to user stop, DO NOT fallback!
         if (activeSessionId !== currentSessionCounter) return;
-        fallbackWebSpeech(cleanText, safeEnd, safeStart, rate, activeSessionId);
+        runWebSpeech(cleanText, 'ar-SA', rate, safeStart, safeEnd, activeSessionId);
       });
     }
-
-    return {
-      stop: () => stopSpeaking()
-    };
   } catch {
-    if (activeSessionId === currentSessionCounter) {
-      fallbackWebSpeech(cleanText, safeEnd, safeStart, rate, activeSessionId);
-    }
-    return {
-      stop: () => stopSpeaking()
-    };
+    runWebSpeech(cleanText, 'ar-SA', rate, safeStart, safeEnd, activeSessionId);
   }
+
+  return { stop: () => stopSpeaking() };
 }
 
-// Fallback to browser Web Speech API with rate and Arabic voice matching
-function fallbackWebSpeech(
-  text: string, 
-  onEnd: () => void, 
-  onStart: () => void, 
-  rate: number = 0.95,
-  sessionId?: number
-) {
-  if (sessionId !== undefined && sessionId !== currentSessionCounter) {
+// Split Arabic text into natural sentences for the interactive sentence-by-sentence reader
+export function splitArabicSentences(text: string): string[] {
+  if (!text) return [];
+  return text
+    .split(/[\n.!?؟]+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+}
+
+// Cheerful praise voice for achievements, badges, and completed missions
+export function playPraiseVoice(
+  studentNameOrIsGirl?: string | boolean,
+  isGirlParam?: boolean,
+  customPhrase?: string
+): void {
+  sounds.playCheerSuccess();
+
+  if (customPhrase) {
+    speakArabic(customPhrase);
     return;
   }
 
-  if (typeof window === 'undefined' || !window.speechSynthesis) {
-    onEnd();
-    return;
-  }
+  const isGirl = typeof studentNameOrIsGirl === 'boolean' 
+    ? studentNameOrIsGirl 
+    : (isGirlParam ?? false);
+  const studentName = typeof studentNameOrIsGirl === 'string' && studentNameOrIsGirl.trim().length > 0 
+    ? studentNameOrIsGirl.trim() 
+    : (isGirl ? 'بَطَلَتَنَا' : 'بَطَلَنَا');
 
-  try {
-    window.speechSynthesis.cancel();
-    if (window.speechSynthesis.paused) {
-      window.speechSynthesis.resume();
-    }
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'ar-SA';
-    utterance.rate = rate;
-    utterance.pitch = 1.0;
-
-    const voices = cachedVoices.length > 0 ? cachedVoices : (window.speechSynthesis.getVoices() || []);
-    const arabicVoice = voices.find(
-      (v) =>
-        v.lang.startsWith('ar') ||
-        v.name.toLowerCase().includes('arabic') ||
-        v.name.toLowerCase().includes('tarik') ||
-        v.name.toLowerCase().includes('laila') ||
-        v.name.toLowerCase().includes('maged') ||
-        v.name.toLowerCase().includes('zeina')
-    );
-    if (arabicVoice) {
-      utterance.voice = arabicVoice;
-    }
-
-    utterance.onstart = () => {
-      if (sessionId !== undefined && sessionId !== currentSessionCounter) {
-        window.speechSynthesis.cancel();
-        return;
-      }
-      onStart();
-    };
-
-    utterance.onend = () => {
-      if (sessionId !== undefined && sessionId !== currentSessionCounter) return;
-      onEnd();
-    };
-
-    utterance.onerror = () => {
-      if (sessionId !== undefined && sessionId !== currentSessionCounter) return;
-      onEnd();
-    };
-
-    window.speechSynthesis.speak(utterance);
-  } catch {
-    onEnd();
-  }
+  const praisesBoys = [
+    `أَحْسَنْتَ يَا ${studentName}! أَنْتَ فَخْرٌ لِلْجَمِيعِ! 🌟`,
+    `عَبْقَرِيٌّ يَا ${studentName}! إِجَابَةٌ رَائِعَةٌ وَتَفَوُّقٌ مُسْتَحَقٌّ! 🚀`,
+    `مَا شَاءَ اللَّهُ عَلَيْكَ يَا ${studentName}! انْطَلِقْ نَحْوَ الصَّدَارَةِ! 🏆`
+  ];
+  const praisesGirls = [
+    `أَحْسَنْتِ يَا ${studentName}! أَنْتِ فَخْرٌ لِلْجَمِيعِ! 🌟`,
+    `عَبْقَرِيَّةٌ يَا ${studentName}! إِجَابَةٌ رَائِعَةٌ وَتَفَوُّقٌ مُسْتَحَقٌّ! 🚀`,
+    `مَا شَاءَ اللَّهُ عَلَيْكِ يَا ${studentName}! انْطَلِقِي نَحْوَ الصَّدَارَةِ! 🏆`
+  ];
+  const list = isGirl ? praisesGirls : praisesBoys;
+  const chosen = list[Math.floor(Math.random() * list.length)];
+  speakArabic(chosen);
 }
 
-// Ultra-clear English Speech for Vocabulary & Dictionary with accurate, calm phonetic pronunciation suited for children
+// Ultra-clear English Speech for Vocabulary & Dictionary
 export function speakEnglish(
   text: string,
   onEnd?: () => void,
@@ -588,69 +616,18 @@ export function speakEnglish(
   rate: number = 0.82
 ): { stop: () => void } {
   stopSpeaking();
-  if (typeof window === 'undefined' || !window.speechSynthesis) {
-    onEnd?.();
-    return { stop: () => {} };
-  }
+  unlockMobileAudio();
 
   const clean = text.replace(/[^a-zA-Z0-9\s'.,!?-]/g, '').trim();
   if (!clean) {
     onEnd?.();
-    return { stop: () => {} };
+    return { stop: () => stopSpeaking() };
   }
 
   const activeSessionId = ++currentSessionCounter;
   isGloballyPlayingAudio = true;
 
-  try {
-    window.speechSynthesis.cancel();
-    if (window.speechSynthesis.paused) {
-      window.speechSynthesis.resume();
-    }
+  runWebSpeech(clean, 'en-US', rate, onStart, onEnd, activeSessionId);
 
-    const utterance = new SpeechSynthesisUtterance(clean);
-    utterance.lang = 'en-US';
-    utterance.rate = rate; // Calm, gentle, articulate cadence for young children
-    utterance.pitch = 1.0;
-    utterance.volume = 0.95;
-
-    const voices = cachedVoices.length > 0 ? cachedVoices : (window.speechSynthesis.getVoices() || []);
-    // Prioritize high-quality, friendly, calm voices
-    const enVoice = voices.find(
-      v => (v.lang === 'en-US' || v.lang === 'en-GB' || v.lang.startsWith('en')) &&
-           (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha') || v.name.includes('Jenny') || v.name.includes('Karen') || v.name.includes('Victoria') || v.name.includes('Zira'))
-    ) || voices.find(v => v.lang.startsWith('en'));
-
-    if (enVoice) {
-      utterance.voice = enVoice;
-    }
-
-    utterance.onstart = () => {
-      if (activeSessionId !== currentSessionCounter) {
-        window.speechSynthesis.cancel();
-        return;
-      }
-      if (onStart) onStart();
-    };
-
-    utterance.onend = () => {
-      if (activeSessionId !== currentSessionCounter) return;
-      isGloballyPlayingAudio = false;
-      if (onEnd) onEnd();
-    };
-
-    utterance.onerror = () => {
-      if (activeSessionId !== currentSessionCounter) return;
-      isGloballyPlayingAudio = false;
-      if (onEnd) onEnd();
-    };
-
-    window.speechSynthesis.speak(utterance);
-    return { stop: () => stopSpeaking() };
-  } catch {
-    isGloballyPlayingAudio = false;
-    onEnd?.();
-    return { stop: () => {} };
-  }
+  return { stop: () => stopSpeaking() };
 }
-

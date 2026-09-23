@@ -150,19 +150,29 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/75 backdrop-blur-md animate-fadeIn">
-      <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border-4 border-amber-400 overflow-hidden flex flex-col">
-        {/* Banner */}
-        <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 p-6 text-white text-center space-y-2 relative">
-          <div className="text-4xl animate-bounce">🎓🌟</div>
-          <h1 className="text-2xl md:text-3xl font-black tracking-wide">مَنَصَّةُ الطَّالِبِ الْمُجْتَهِدِ</h1>
-          <p className="text-amber-100 text-xs font-bold">
-            بَوَّابَةُ التَّفَوُّقِ لِلصَّفِّ الثَّالِثِ الِابْتِدَائِيِّ (رِيَاضِيَّاتٌ • إِنْجِلِيزِيٌّ • عَرَبِيٌّ)
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-indigo-950/45 backdrop-blur-md animate-fadeIn">
+      <div className="relative w-full max-w-lg bg-white/98 rounded-3xl shadow-2xl border-4 border-indigo-200/90 overflow-hidden flex flex-col">
+        {/* Playful Floating Bubbles Background Decoration */}
+        <div className="absolute -top-10 -right-10 w-32 h-32 bg-sky-200/30 rounded-full blur-xl pointer-events-none"></div>
+        <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-pink-200/30 rounded-full blur-xl pointer-events-none"></div>
+
+        {/* Cheerful Colorful Banner */}
+        <div className="bg-gradient-to-r from-indigo-600 via-sky-500 to-emerald-500 p-6 text-white text-center space-y-2 relative overflow-hidden">
+          <div className="flex items-center justify-center gap-2 text-3xl animate-bounce-subtle">
+            <span className="animate-wiggle">🎒</span>
+            <span className="animate-sparkle text-yellow-300">⭐</span>
+            <span className="animate-float">🎓</span>
+            <span className="animate-sparkle text-yellow-300">✨</span>
+            <span className="animate-wiggle">🚀</span>
+          </div>
+          <h1 className="text-2xl md:text-3xl font-black tracking-wide drop-shadow-sm">مَنَصَّةُ الطَّالِبِ الْمُجْتَهِدِ</h1>
+          <p className="text-sky-100 text-xs sm:text-sm font-bold">
+            بَوَّابَةُ التَّفَوُّقِ وَالْمَرَحِ لِلصَّفِّ الثَّالِثِ الِابْتِدَائِيِّ (رِيَاضِيَّاتٌ • إِنْجِلِيزِيٌّ • عَرَبِيٌّ)
           </p>
         </div>
 
         {/* Role Selector Tabs */}
-        <div className="grid grid-cols-3 bg-stone-100 p-1.5 border-b border-stone-200">
+        <div className="grid grid-cols-3 bg-sky-50/70 p-1.5 border-b border-indigo-100">
           <button
             type="button"
             onClick={() => {
@@ -172,8 +182,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             }}
             className={`py-2.5 px-2 rounded-2xl font-black text-xs md:text-sm flex items-center justify-center gap-1.5 transition-all ${
               activeTab === 'student'
-                ? 'bg-amber-500 text-white shadow-md scale-102'
-                : 'text-stone-600 hover:bg-stone-200'
+                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md scale-102 ring-2 ring-amber-300'
+                : 'text-slate-600 hover:bg-white/80'
             }`}
           >
             <span>🎒</span>
@@ -189,8 +199,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             }}
             className={`py-2.5 px-2 rounded-2xl font-black text-xs md:text-sm flex items-center justify-center gap-1.5 transition-all ${
               activeTab === 'teacher'
-                ? 'bg-sky-600 text-white shadow-md scale-102'
-                : 'text-stone-600 hover:bg-stone-200'
+                ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md scale-102 ring-2 ring-sky-300'
+                : 'text-slate-600 hover:bg-white/80'
             }`}
           >
             <span>👨‍🏫</span>
@@ -206,8 +216,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             }}
             className={`py-2.5 px-2 rounded-2xl font-black text-xs md:text-sm flex items-center justify-center gap-1.5 transition-all ${
               activeTab === 'supervisor'
-                ? 'bg-purple-700 text-white shadow-md scale-102'
-                : 'text-stone-600 hover:bg-stone-200'
+                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md scale-102 ring-2 ring-purple-300'
+                : 'text-slate-600 hover:bg-white/80'
             }`}
           >
             <span>🛠️</span>
@@ -218,9 +228,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         {/* Tab 1: Student Login */}
         {activeTab === 'student' && (
           <form onSubmit={handleStudentLogin} className="p-6 space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-stone-100">
-              <span className="text-xs font-black text-stone-800 flex items-center gap-1.5">
-                <span>🌟</span>
+            <div className="flex items-center justify-between pb-2 border-b border-indigo-50">
+              <span className="text-xs font-black text-slate-800 flex items-center gap-1.5">
+                <span className="text-amber-500">🌟</span>
                 <span>اخْتَرْ بَطَلَكَ لِبَدْءِ التَّعَلُّمِ:</span>
               </span>
               <button
@@ -230,7 +240,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                   setErrorMessage('');
                   sounds.playClick();
                 }}
-                className="text-xs font-bold text-amber-600 hover:text-amber-700 underline"
+                className="text-xs font-black text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-200 transition"
               >
                 {isNewStudentMode ? '← اخْتِيَارُ تِلْمِيذٍ مُسَجَّلٍ' : '➕ إِضَافَةُ بَطَلٍ جَدِيدٍ'}
               </button>
@@ -249,21 +259,24 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                       }}
                       className={`p-3 rounded-2xl border-2 flex items-center gap-2.5 transition-all text-right ${
                         selectedStudentId === stu.id
-                          ? 'border-amber-500 bg-amber-50 text-amber-950 font-black shadow-sm ring-2 ring-amber-300'
-                          : 'border-stone-200 hover:bg-stone-50 text-stone-700'
+                          ? 'border-indigo-500 bg-indigo-50/80 text-indigo-950 font-black shadow-md ring-2 ring-indigo-300 scale-102'
+                          : 'border-slate-200 bg-slate-50/60 hover:bg-slate-100 text-slate-700'
                       }`}
                     >
-                      <span className="text-2xl">{stu.avatar}</span>
+                      <span className="text-3xl animate-bounce-subtle">{stu.avatar}</span>
                       <div className="truncate">
-                        <div className="font-bold text-sm truncate">{stu.name}</div>
-                        <div className="text-[11px] text-amber-600 font-bold">{stu.totalStars} ⭐ نَجْمَة</div>
+                        <div className="font-bold text-sm truncate text-slate-900">{stu.name}</div>
+                        <div className="text-[11px] text-amber-600 font-black flex items-center gap-1">
+                          <span>{stu.totalStars}</span>
+                          <span>⭐ نَجْمَة</span>
+                        </div>
                       </div>
                     </button>
                   ))}
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-xs font-bold text-stone-700">
+                  <label className="block text-xs font-bold text-slate-700">
                     كَلِمَةُ مُرُورِ التِّلْمِيذِ (اخْتِيَارِيٌّ / افْتِرَاضِيٌّ 123):
                   </label>
                   <div className="relative">
@@ -272,22 +285,22 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                       value={studentPin}
                       onChange={e => setStudentPin(e.target.value)}
                       placeholder="123"
-                      className="w-full px-4 py-2.5 bg-stone-50 border-2 border-stone-200 rounded-xl text-stone-800 font-bold focus:outline-none focus:border-amber-500"
+                      className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-200 rounded-xl text-slate-800 font-bold focus:outline-none focus:border-indigo-500"
                     />
-                    <KeyRound className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
+                    <KeyRound className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                   </div>
                 </div>
               </div>
             ) : (
               <div className="space-y-3 animate-fadeIn">
                 <div className="space-y-1">
-                  <label className="block text-xs font-black text-stone-800">اسْمُ الْبَطَلِ الْجَدِيدِ:</label>
+                  <label className="block text-xs font-black text-slate-800">اسْمُ الْبَطَلِ الْجَدِيدِ:</label>
                   <input
                     type="text"
                     value={newStudentName}
                     onChange={e => setNewStudentName(e.target.value)}
                     placeholder="مِثْلَ: مَالِك، نُور، سَارَة، يُوسُف..."
-                    className="w-full px-4 py-2.5 bg-stone-50 border-2 border-stone-200 rounded-xl text-stone-900 font-bold focus:outline-none focus:border-amber-500"
+                    className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:border-indigo-500"
                     autoFocus
                   />
                 </div>
@@ -301,7 +314,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                       sounds.playClick();
                     }}
                     className={`py-2 rounded-xl text-xs font-bold border-2 transition ${
-                      !newStudentIsGirl ? 'border-sky-500 bg-sky-50 text-sky-900 font-black' : 'border-stone-200 text-stone-600'
+                      !newStudentIsGirl ? 'border-sky-500 bg-sky-50 text-sky-900 font-black ring-2 ring-sky-300' : 'border-slate-200 text-slate-600'
                     }`}
                   >
                     👦 بَطَلٌ (وَلَدٌ)
@@ -310,11 +323,11 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                     type="button"
                     onClick={() => {
                       setNewStudentIsGirl(true);
-                      setNewStudentAvatar('🌟');
+                      setNewStudentAvatar('🌸');
                       sounds.playClick();
                     }}
                     className={`py-2 rounded-xl text-xs font-bold border-2 transition ${
-                      newStudentIsGirl ? 'border-pink-500 bg-pink-50 text-pink-900 font-black' : 'border-stone-200 text-stone-600'
+                      newStudentIsGirl ? 'border-pink-500 bg-pink-50 text-pink-900 font-black ring-2 ring-pink-300' : 'border-slate-200 text-slate-600'
                     }`}
                   >
                     👧 بَطَلَةٌ (بِنْتٌ)
@@ -322,7 +335,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-xs font-bold text-stone-700">اخْتَرْ رَمْزَكَ:</label>
+                  <label className="block text-xs font-bold text-slate-700">اخْتَرْ رَمْزَكَ:</label>
                   <div className="grid grid-cols-4 gap-1.5">
                     {AVATARS.map(av => (
                       <button
@@ -333,24 +346,24 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                           sounds.playButtonTap();
                         }}
                         className={`p-2 rounded-xl border-2 text-center transition ${
-                          newStudentAvatar === av.icon ? 'border-amber-500 bg-amber-50 ring-2 ring-amber-300' : 'border-stone-200'
+                          newStudentAvatar === av.icon ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-300' : 'border-slate-200 hover:bg-slate-50'
                         }`}
                       >
                         <span className="text-xl block">{av.icon}</span>
-                        <span className="text-[10px] font-bold text-stone-600">{av.label}</span>
+                        <span className="text-[10px] font-bold text-slate-600">{av.label}</span>
                       </button>
                     ))}
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-xs font-bold text-stone-700">كَلِمَةُ مُرُورٍ خَفِيفَةٌ لِلْحِمَايَةِ (مَثَلاً 123):</label>
+                  <label className="block text-xs font-bold text-slate-700">كَلِمَةُ مُرُورٍ خَفِيفَةٌ لِلْحِمَايَةِ (مَثَلاً 123):</label>
                   <input
                     type="password"
                     value={studentPin}
                     onChange={e => setStudentPin(e.target.value)}
                     placeholder="123"
-                    className="w-full px-4 py-2 bg-stone-50 border border-stone-200 rounded-xl text-stone-800 font-bold"
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-bold"
                   />
                 </div>
               </div>
@@ -360,9 +373,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
             <button
               type="submit"
-              className="w-full py-3.5 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white font-black text-base rounded-2xl shadow-lg transition-transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
+              className="w-full py-3.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500 hover:from-emerald-600 hover:to-sky-600 text-white font-black text-base rounded-2xl shadow-xl transition-transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
             >
-              <span>انْطَلِقْ لِمُغَامَرَةِ التَّفَوُّقِ! 🚀</span>
+              <span className="text-xl">🚀</span>
+              <span>انْطَلِقْ لِمُغَامَرَةِ التَّفَوُّقِ الْمُمْتِعَةِ!</span>
             </button>
           </form>
         )}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TeacherAccount, UserProfile, SupervisorConfig, ClassroomAnnouncement } from '../types';
+import { TeacherAccount, UserProfile, SupervisorConfig, ClassroomAnnouncement, LiveOnlineStudent } from '../types';
 import { 
   getSupervisorConfig, 
   saveSupervisorConfig, 
@@ -12,6 +12,7 @@ import {
   getAnnouncements,
   addAnnouncement
 } from '../utils/authStorage';
+import { fetchLiveOnlineStudents } from '../utils/presenceManager';
 import { sounds } from '../utils/audio';
 import { 
   ShieldCheck, 
@@ -45,6 +46,7 @@ export const AdminSupervisorPanel: React.FC<AdminSupervisorPanelProps> = ({
   const [config, setConfig] = useState<SupervisorConfig>(getSupervisorConfig());
   const [teachers, setTeachers] = useState<TeacherAccount[]>([]);
   const [students, setStudents] = useState<UserProfile[]>([]);
+  const [liveStudents, setLiveStudents] = useState<LiveOnlineStudent[]>([]);
   const [announcements, setAnnouncements] = useState<ClassroomAnnouncement[]>([]);
 
   // New Teacher Fields
@@ -67,9 +69,19 @@ export const AdminSupervisorPanel: React.FC<AdminSupervisorPanelProps> = ({
   const [broadcastText, setBroadcastText] = useState('');
   const [alertFeedback, setAlertFeedback] = useState('');
 
+  const refreshLivePresence = async () => {
+    try {
+      const live = await fetchLiveOnlineStudents();
+      setLiveStudents(live);
+    } catch {}
+  };
+
   useEffect(() => {
     if (isOpen) {
       loadAll();
+      refreshLivePresence();
+      const interval = setInterval(refreshLivePresence, 4000);
+      return () => clearInterval(interval);
     }
   }, [isOpen]);
 
@@ -391,32 +403,104 @@ export const AdminSupervisorPanel: React.FC<AdminSupervisorPanelProps> = ({
                 </h3>
 
                 <div className="divide-y divide-stone-100 max-h-80 overflow-y-auto">
-                  {students.map(s => (
-                    <div key={s.id} className="py-2.5 flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl">{s.avatar}</span>
-                        <div>
-                          <div className="font-bold text-xs text-stone-900 flex items-center gap-2">
-                            <span>{s.name}</span>
-                            <span className="text-[10px] text-stone-400 font-mono">PIN: {s.pin || '123'}</span>
+                  {students.map(s => {
+                    const liveMatch = liveStudents.find(o => 
+                      (s.id && o.id === s.id) || 
+                      (o.name && s.name && o.name.trim().toLowerCase() === s.name.trim().toLowerCase())
+                    );
+                    const isOnline = !!liveMatch;
+
+                    return (
+                      <div key={s.id} className={`py-2.5 px-2 rounded-xl transition flex items-center justify-between gap-3 ${isOnline ? 'bg-emerald-50/70 border border-emerald-200' : ''}`}>
+                        <div className="flex items-center gap-3">
+                          <div className="relative">
+                            <span className="text-2xl">{s.avatar}</span>
+                            {isOnline && (
+                              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white animate-pulse" />
+                            )}
                           </div>
-                          <div className="text-[11px] text-amber-600 font-bold">
-                            {s.totalStars} ⭐ نَجْمَة | {s.onlineStatus === 'online' ? '🟢 مُتَّصِلٌ' : '⚪ غَيْرُ نَشِطٍ'}
+                          <div>
+                            <div className="font-bold text-xs text-stone-900 flex items-center gap-2">
+                              <span>{s.name}</span>
+                              <span className="text-[10px] text-stone-400 font-mono">PIN: {s.pin || '123'}</span>
+                            </div>
+                            <div className="text-[11px] text-amber-600 font-bold flex items-center gap-2">
+                              <span>{s.totalStars} ⭐ نَجْمَة</span>
+                              <span className={`text-[10px] px-2 py-0.5 rounded-full font-black ${isOnline ? 'bg-emerald-200 text-emerald-800' : 'bg-stone-100 text-stone-500'}`}>
+                                {isOnline ? '🟢 مُتَّصِلٌ الآنَ' : '⚪ غَيْرُ نَشِطٍ'}
+                              </span>
+                              {isOnline && liveMatch?.currentActivity && (
+                                <span className="text-[10px] text-emerald-700 font-medium">
+                                  ({liveMatch.currentActivity})
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteStudent(s.id || '', s.name)}
-                        className="p-1.5 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
-                        title="حذف التلميذ"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteStudent(s.id || '', s.name)}
+                          className="p-1.5 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                          title="حذف التلميذ"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
+
+                {/* Newly connected students from other phones */}
+                {(() => {
+                  const unreg = liveStudents.filter(ls => 
+                    !students.some(s => 
+                      (s.id && ls.id === s.id) || 
+                      (s.name && ls.name && s.name.trim().toLowerCase() === ls.name.trim().toLowerCase())
+                    )
+                  );
+                  if (unreg.length === 0) return null;
+
+                  return (
+                    <div className="mt-3 p-3 bg-emerald-50 rounded-xl border-2 border-dashed border-emerald-300">
+                      <div className="text-xs font-black text-emerald-900 mb-2 flex items-center gap-1.5">
+                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
+                        <span>أَبْطَالٌ مُتَّصِلُونَ الآنَ مِنْ هَوَاتِفَ أُخْرَى ({unreg.length}):</span>
+                      </div>
+                      <div className="space-y-1.5">
+                        {unreg.map(u => (
+                          <div key={u.id} className="bg-white p-2 rounded-lg border border-emerald-200 flex items-center justify-between text-xs">
+                            <div className="flex items-center gap-2">
+                              <span>{u.avatar || '👦'}</span>
+                              <span className="font-bold text-stone-800">{u.name}</span>
+                              <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded-full">
+                                🟢 مُتَّصِلٌ ({u.currentActivity || 'يَتَعَلَّمُ'})
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                addStudent({
+                                  name: u.name,
+                                  heroType: u.heroType || (u.isGirl ? 'girl' : 'boy'),
+                                  avatar: u.avatar || (u.isGirl ? '👧' : '👦'),
+                                  pin: '123'
+                                });
+                                sounds.playCheerSuccess();
+                                loadAll();
+                                refreshLivePresence();
+                                onRefreshData?.();
+                              }}
+                              className="px-2.5 py-0.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-bold"
+                            >
+                              ➕ حِفْظٌ
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           )}

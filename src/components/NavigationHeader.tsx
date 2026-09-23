@@ -87,7 +87,7 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
   return (
     <header 
       id="main-app-header"
-      className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b-2 border-amber-300 shadow-sm px-3 sm:px-4 py-2.5"
+      className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b-2 border-indigo-100 shadow-sm px-3 sm:px-4 py-2.5"
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 flex-wrap">
         
@@ -102,7 +102,7 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
             className="flex items-center gap-2 group text-right focus:outline-none"
             title="الرئيسية - منصة الطالب المجتهد"
           >
-            <div className="w-10 h-10 md:w-11 md:h-11 bg-gradient-to-tr from-amber-500 via-orange-500 to-amber-600 rounded-2xl flex items-center justify-center text-2xl shadow-md group-hover:scale-105 transition transform">
+            <div className="w-10 h-10 md:w-11 md:h-11 bg-gradient-to-tr from-indigo-500 via-sky-500 to-emerald-500 rounded-2xl flex items-center justify-center text-2xl shadow-md group-hover:scale-105 transition transform animate-bounce-subtle">
               🎓
             </div>
             <div>
@@ -110,7 +110,7 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
                 <span className="text-lg md:text-xl font-black text-slate-900 leading-tight">
                   مَنَصَّةُ الطَّالِبِ الْمُجْتَهِدِ
                 </span>
-                <span className="bg-amber-100 text-amber-900 text-[10px] font-black px-2 py-0.5 rounded-full border border-amber-300">
+                <span className="bg-indigo-100 text-indigo-900 text-[10px] font-black px-2 py-0.5 rounded-full border border-indigo-200">
                   صَفّ ٣ الابْتِدَائِيُّ
                 </span>
               </div>

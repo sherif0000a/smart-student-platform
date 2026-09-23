@@ -32,11 +32,74 @@ function normalizeSearchText(text: string): string {
     .toLowerCase()
     .replace(/[\u064B-\u065F\u0670]/g, '') // remove diacritics (tashkeel)
     .replace(/[إأآا]/g, 'ا')
-    .replace(/ة/g, 'ه')
-    .replace(/ى/g, 'ي')
+    .replace(/[ةه]/g, 'ه')
+    .replace(/[ىي]/g, 'ي')
     .replace(/ئ/g, 'ي')
     .replace(/ؤ/g, 'و')
     .trim();
+}
+
+function wordMatchesQuery(item: DictionaryWord, q: string, rawQ: string): boolean {
+  if (!q) return true;
+
+  const normWord = item.word.toLowerCase();
+  const normAr = normalizeSearchText(item.arabicMeaning);
+  const normPron = normalizeSearchText(item.pronunciationGuide || '');
+  const normExEn = item.exampleEn?.toLowerCase() || '';
+  const normExAr = normalizeSearchText(item.exampleAr || '');
+
+  // 1. Direct contains check
+  if (
+    normWord.includes(q) ||
+    normAr.includes(q) ||
+    normPron.includes(q) ||
+    normExEn.includes(q) ||
+    normExAr.includes(q)
+  ) {
+    return true;
+  }
+
+  // 2. Arabic definite article "الـ" stripping (e.g. "المدرسة" -> "مدرسة", "الفيل" -> "فيل", "الساعة" -> "ساعة")
+  if (q.startsWith('ال') && q.length > 3) {
+    const strippedQ = q.slice(2);
+    if (
+      normAr.includes(strippedQ) ||
+      normPron.includes(strippedQ) ||
+      normExAr.includes(strippedQ)
+    ) {
+      return true;
+    }
+  }
+
+  // 3. Item arabic meaning has "الـ" and query doesn't
+  if (normAr.startsWith('ال') && normAr.length > 3) {
+    const strippedAr = normAr.slice(2);
+    if (strippedAr.includes(q)) return true;
+  }
+
+  // 4. Reverse search: child typed "معنى كلمة مدرسة" -> includes item "مدرسه"
+  if (q.length > 4 && normAr.length >= 3 && q.includes(normAr)) {
+    return true;
+  }
+
+  // 5. Multi-word search token matching
+  const tokens = q.split(/\s+/).filter(t => t.length > 1);
+  if (tokens.length > 1) {
+    const anyTokenMatch = tokens.some(t => {
+      const cleanT = t.startsWith('ال') && t.length > 3 ? t.slice(2) : t;
+      return normWord.includes(t) || normAr.includes(t) || normAr.includes(cleanT);
+    });
+    if (anyTokenMatch) return true;
+  }
+
+  // 6. English plurals and endings (e.g. "cats" -> "cat", "apples" -> "apple")
+  const lowerRaw = rawQ.toLowerCase();
+  if (lowerRaw.endsWith('s') && lowerRaw.length > 3) {
+    const singular = lowerRaw.slice(0, -1);
+    if (normWord === singular || normWord.startsWith(singular)) return true;
+  }
+
+  return false;
 }
 
 export const EnglishDictionaryModal: React.FC<EnglishDictionaryModalProps> = ({
@@ -59,34 +122,19 @@ export const EnglishDictionaryModal: React.FC<EnglishDictionaryModalProps> = ({
 
     const q = normalizeSearchText(rawQ);
 
-    // First try matching within the selected category
+    // First try matching within selected category
     const categoryMatches = englishDictionary1000.filter(item => {
       const matchCat = selectedCategory === 'all' || item.category === selectedCategory;
       if (!matchCat) return false;
-
-      const normWord = item.word.toLowerCase();
-      const normAr = normalizeSearchText(item.arabicMeaning);
-      const normPron = normalizeSearchText(item.pronunciationGuide || '');
-      const normExEn = item.exampleEn?.toLowerCase() || '';
-      const normExAr = normalizeSearchText(item.exampleAr || '');
-
-      return normWord.includes(q) || normAr.includes(q) || normPron.includes(q) || normExEn.includes(q) || normExAr.includes(q);
+      return wordMatchesQuery(item, q, rawQ);
     });
 
     if (categoryMatches.length > 0) {
       return categoryMatches;
     }
 
-    // If no match in the specific category, search across the entire dictionary so the student never gets stuck!
-    return englishDictionary1000.filter(item => {
-      const normWord = item.word.toLowerCase();
-      const normAr = normalizeSearchText(item.arabicMeaning);
-      const normPron = normalizeSearchText(item.pronunciationGuide || '');
-      const normExEn = item.exampleEn?.toLowerCase() || '';
-      const normExAr = normalizeSearchText(item.exampleAr || '');
-
-      return normWord.includes(q) || normAr.includes(q) || normPron.includes(q) || normExEn.includes(q) || normExAr.includes(q);
-    });
+    // Search across all items in dictionary
+    return englishDictionary1000.filter(item => wordMatchesQuery(item, q, rawQ));
   }, [searchQuery, selectedCategory]);
 
   const handlePronounce = (word: DictionaryWord) => {

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { TeacherAccount, UserProfile, ClassroomAnnouncement } from '../types';
+import { TeacherAccount, UserProfile, ClassroomAnnouncement, LiveOnlineStudent } from '../types';
 import { getStudentsList, addStudent, deleteStudent, getAnnouncements, addAnnouncement } from '../utils/authStorage';
+import { fetchLiveOnlineStudents } from '../utils/presenceManager';
 import { sounds } from '../utils/audio';
-import { UserPlus, Trash2, Send, Users, Star, Award, ShieldAlert, X, MessageSquare, CheckCircle, Sparkles, Phone, Smartphone } from 'lucide-react';
+import { UserPlus, Trash2, Send, Users, Star, Award, ShieldAlert, X, MessageSquare, CheckCircle, Sparkles, Phone, Smartphone, RefreshCw, Radio } from 'lucide-react';
 import { SendCertificateWhatsAppModal } from './SendCertificateWhatsAppModal';
 
 interface TeacherClassroomDashboardModalProps {
@@ -19,6 +20,7 @@ export const TeacherClassroomDashboardModal: React.FC<TeacherClassroomDashboardM
   onRefreshData
 }) => {
   const [students, setStudents] = useState<UserProfile[]>([]);
+  const [liveStudents, setLiveStudents] = useState<LiveOnlineStudent[]>([]);
   const [announcements, setAnnouncements] = useState<ClassroomAnnouncement[]>([]);
   const [newStudentName, setNewStudentName] = useState('');
   const [newStudentGender, setNewStudentGender] = useState<'boy' | 'girl'>('boy');
@@ -29,9 +31,19 @@ export const TeacherClassroomDashboardModal: React.FC<TeacherClassroomDashboardM
   const [isCertModalOpen, setIsCertModalOpen] = useState(false);
   const [certStudentId, setCertStudentId] = useState<string | undefined>(undefined);
 
+  const refreshLivePresence = async () => {
+    try {
+      const live = await fetchLiveOnlineStudents();
+      setLiveStudents(live);
+    } catch {}
+  };
+
   useEffect(() => {
     if (isOpen) {
       loadData();
+      refreshLivePresence();
+      const interval = setInterval(refreshLivePresence, 4000);
+      return () => clearInterval(interval);
     }
   }, [isOpen]);
 
@@ -149,12 +161,13 @@ export const TeacherClassroomDashboardModal: React.FC<TeacherClassroomDashboardM
 
             <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-2xs flex items-center justify-between">
               <div>
-                <div className="text-xs text-stone-500 font-bold">التَّلَامِيذُ الْمُتَّصِلُونَ</div>
-                <div className="text-2xl font-black text-emerald-600">
-                  {students.filter(s => s.onlineStatus === 'online').length} تِلْمِيذاً
+                <div className="text-xs text-stone-500 font-bold">التَّلَامِيذُ الْمُتَّصِلُونَ الآنَ</div>
+                <div className="text-2xl font-black text-emerald-600 flex items-center gap-2">
+                  <span>{liveStudents.length} تِلْمِيذاً</span>
+                  <span className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse inline-block" />
                 </div>
               </div>
-              <span className="w-3.5 h-3.5 rounded-full bg-emerald-500 animate-ping" />
+              <Radio className="w-8 h-8 text-emerald-500 animate-pulse" />
             </div>
 
             <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-2xs flex items-center justify-between">
@@ -271,54 +284,144 @@ export const TeacherClassroomDashboardModal: React.FC<TeacherClassroomDashboardM
             </div>
 
             <div className="divide-y divide-stone-100 max-h-60 overflow-y-auto">
-              {students.map(s => (
-                <div key={s.id} className="py-2.5 flex items-center justify-between gap-3 flex-wrap">
-                  <div className="flex items-center gap-2.5">
-                    <span className="text-2xl">{s.avatar}</span>
-                    <div>
-                      <div className="font-bold text-xs text-stone-900 flex items-center gap-1.5">
-                        <span>{s.name}</span>
-                        <span className="text-[10px] text-stone-400 font-normal">PIN: {s.pin || '123'}</span>
-                      </div>
-                      <div className="text-[11px] text-amber-600 font-bold flex items-center gap-2">
-                        <span className="flex items-center gap-0.5">
-                          <Star className="w-3 h-3 fill-amber-400 text-amber-500" />
-                          <span>{s.totalStars} نَجْمَة</span>
-                        </span>
-                        {s.parentPhone && (
-                          <span className="text-[10px] text-stone-400 font-mono" dir="ltr">
-                            📱 {s.parentPhone}
-                          </span>
+              {students.map(s => {
+                const liveMatch = liveStudents.find(o => 
+                  (s.id && o.id === s.id) || 
+                  (o.name && s.name && o.name.trim().toLowerCase() === s.name.trim().toLowerCase())
+                );
+                const isOnline = !!liveMatch;
+
+                return (
+                  <div key={s.id} className={`py-2.5 px-2 rounded-xl transition flex items-center justify-between gap-3 flex-wrap ${isOnline ? 'bg-emerald-50/60 border border-emerald-200/80 my-1' : ''}`}>
+                    <div className="flex items-center gap-2.5">
+                      <div className="relative">
+                        <span className="text-2xl">{s.avatar}</span>
+                        {isOnline && (
+                          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white animate-pulse" />
                         )}
                       </div>
+                      <div>
+                        <div className="font-bold text-xs text-stone-900 flex items-center gap-1.5">
+                          <span>{s.name}</span>
+                          <span className="text-[10px] text-stone-400 font-normal">PIN: {s.pin || '123'}</span>
+                        </div>
+                        <div className="text-[11px] text-amber-600 font-bold flex items-center gap-2">
+                          <span className="flex items-center gap-0.5">
+                            <Star className="w-3 h-3 fill-amber-400 text-amber-500" />
+                            <span>{s.totalStars} نَجْمَة</span>
+                          </span>
+                          {s.parentPhone && (
+                            <span className="text-[10px] text-stone-400 font-mono" dir="ltr">
+                              📱 {s.parentPhone}
+                            </span>
+                          )}
+                          {isOnline && liveMatch?.currentActivity && (
+                            <span className="text-[10px] text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full font-bold">
+                              📍 {liveMatch.currentActivity}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenCertModal(s.id)}
+                        className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg text-xs font-black transition flex items-center gap-1 border border-emerald-200 shadow-2xs"
+                        title="إرسال شهادة تقدير عبر الواتساب"
+                      >
+                        <Award className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>شَهَادَةٌ 📱</span>
+                      </button>
+                      <span className={`text-[10px] font-black px-2.5 py-1 rounded-full flex items-center gap-1 ${
+                        isOnline 
+                          ? 'text-emerald-800 bg-emerald-200 border border-emerald-300 animate-pulse' 
+                          : 'text-stone-500 bg-stone-100'
+                      }`}>
+                        {isOnline ? '🟢 مُتَّصِلٌ الآنَ' : '⚪ غَيْرُ نَشِطٍ'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteStudent(s.id || '', s.name)}
+                        className="p-1.5 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                        title="حذف التلميذ"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
+                );
+              })}
+            </div>
 
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleOpenCertModal(s.id)}
-                      className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg text-xs font-black transition flex items-center gap-1 border border-emerald-200 shadow-2xs"
-                      title="إرسال شهادة تقدير عبر الواتساب"
-                    >
-                      <Award className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>شَهَادَةٌ 📱</span>
-                    </button>
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-                      {s.onlineStatus === 'online' ? '🟢 أُونْلَايْن' : '⚪ غَيْرُ نَشِطٍ'}
+            {/* External Live Students from other phones */}
+            {(() => {
+              const unregistered = liveStudents.filter(ls => 
+                !students.some(s => 
+                  (s.id && ls.id === s.id) || 
+                  (s.name && ls.name && s.name.trim().toLowerCase() === ls.name.trim().toLowerCase())
+                )
+              );
+
+              if (unregistered.length === 0) return null;
+
+              return (
+                <div className="mt-4 p-3 bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-100/80 rounded-2xl border-2 border-dashed border-emerald-400 animate-fadeIn">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-xs font-black text-emerald-900 flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping inline-block" />
+                      <span>تَلَامِيذٌ مُتَّصِلُونَ الآنَ مِنْ هَوَاتِفَ أُخْرَى ({unregistered.length}):</span>
+                    </h4>
+                    <span className="text-[10px] text-emerald-700 font-bold bg-white/80 px-2 py-0.5 rounded-full">
+                      مُتَّصِلٌ حَيٌّ 📡
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteStudent(s.id || '', s.name)}
-                      className="p-1.5 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
-                      title="حذف التلميذ"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {unregistered.map(unreg => (
+                      <div key={unreg.id} className="bg-white p-2.5 rounded-xl border border-emerald-200 shadow-2xs flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">{unreg.avatar || '👦'}</span>
+                          <div>
+                            <div className="text-xs font-black text-stone-900 flex items-center gap-1.5">
+                              <span>{unreg.name}</span>
+                              <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.2 rounded-full">
+                                🟢 مُتَّصِلٌ الآنَ
+                              </span>
+                            </div>
+                            <div className="text-[10px] text-stone-500 font-bold">
+                              ⭐ {unreg.stars || 15} نَجْمَة | 📍 {unreg.currentActivity || 'يَتَعَلَّمُ الآنَ'}
+                            </div>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            addStudent({
+                              name: unreg.name,
+                              heroType: unreg.heroType || (unreg.isGirl ? 'girl' : 'boy'),
+                              avatar: unreg.avatar || (unreg.isGirl ? '👧' : '👦'),
+                              pin: '123',
+                              parentPhone: '01080997505'
+                            });
+                            sounds.playCheerSuccess();
+                            setFeedbackMsg(`تَمَّتْ إِضَافَةُ الطَّالِبِ الْمُتَّصِلِ (${unreg.name}) إِلَى قَائِمَةِ فَصْلِكَ بِنَجَاحٍ! ⭐`);
+                            loadData();
+                            refreshLivePresence();
+                            onRefreshData?.();
+                          }}
+                          className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-black transition flex items-center gap-1 shadow-2xs active:scale-95"
+                        >
+                          <UserPlus className="w-3.5 h-3.5" />
+                          <span>إِضَافَةٌ لِلْفَصْلِ ➕</span>
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              ))}
-            </div>
+              );
+            })()}
           </div>
 
           {/* Supervisor Protection Note */}

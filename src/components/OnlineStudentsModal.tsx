@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Users, X, Sparkles, Star, Award, Heart, MessageCircle, Send, RefreshCw, Zap } from 'lucide-react';
 import { LiveOnlineStudent } from '../types';
+import { fetchLiveOnlineStudents } from '../utils/presenceManager';
 import { sounds } from '../utils/audio';
 
 interface OnlineStudentsModalProps {
@@ -25,13 +26,8 @@ export const OnlineStudentsModal: React.FC<OnlineStudentsModalProps> = ({
   const fetchOnlineList = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/presence/online');
-      if (res.ok) {
-        const data = await res.json();
-        if (data.students && Array.isArray(data.students)) {
-          setStudents(data.students);
-        }
-      }
+      const list = await fetchLiveOnlineStudents(currentStudentId);
+      setStudents(list);
     } catch (err) {
       console.warn('Failed to fetch online students:', err);
     } finally {
@@ -42,7 +38,7 @@ export const OnlineStudentsModal: React.FC<OnlineStudentsModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       fetchOnlineList();
-      const interval = setInterval(fetchOnlineList, 10000);
+      const interval = setInterval(fetchOnlineList, 5000);
       return () => clearInterval(interval);
     }
   }, [isOpen]);

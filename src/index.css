@@ -32,10 +32,15 @@
   letter-spacing: 0.01em;
 }
 
-/* Custom soft pulse and gentle float for kids interaction */
+/* Kid-Friendly Bubbly Keyframe Animations */
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-6px); }
+  50% { transform: translateY(-7px); }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(2deg); }
 }
 
 @keyframes calm-pulse {
@@ -44,21 +49,36 @@
 }
 
 @keyframes gentle-glow {
-  0%, 100% { box-shadow: 0 0 15px rgba(245, 158, 11, 0.2); }
-  50% { box-shadow: 0 0 25px rgba(245, 158, 11, 0.45); }
+  0%, 100% { box-shadow: 0 0 15px rgba(99, 102, 241, 0.25); }
+  50% { box-shadow: 0 0 25px rgba(236, 72, 153, 0.4); }
 }
 
 @keyframes sparkle-twinkle {
-  0%, 100% { opacity: 0.3; transform: scale(0.8) rotate(0deg); }
-  50% { opacity: 1; transform: scale(1.2) rotate(15deg); }
+  0%, 100% { opacity: 0.4; transform: scale(0.85) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.15) rotate(18deg); }
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-3deg); }
+  75% { transform: rotate(3deg); }
+}
+
+@keyframes bounce-subtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
 }
 
 .animate-float {
-  animation: float 4s ease-in-out infinite;
+  animation: float 3.5s ease-in-out infinite;
+}
+
+.animate-float-slow {
+  animation: float-slow 5s ease-in-out infinite;
 }
 
 .animate-calm-pulse {
-  animation: calm-pulse 3.5s ease-in-out infinite;
+  animation: calm-pulse 3s ease-in-out infinite;
 }
 
 .animate-gentle-glow {
@@ -66,5 +86,13 @@
 }
 
 .animate-sparkle {
-  animation: sparkle-twinkle 2.5s ease-in-out infinite;
+  animation: sparkle-twinkle 2s ease-in-out infinite;
+}
+
+.animate-wiggle {
+  animation: wiggle 2s ease-in-out infinite;
+}
+
+.animate-bounce-subtle {
+  animation: bounce-subtle 2s ease-in-out infinite;
 }
